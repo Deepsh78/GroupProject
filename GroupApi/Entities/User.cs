@@ -14,9 +14,10 @@ namespace GroupApi.Entities
         public string LastName { get; set; }
         public GenderType Gender { get; set; }
         public string? ImageUrl { get; set; }
-        public DateTime RegistrData { get; set; } = DateTime.UtcNow;
+        public DateTime RegisterData { get; set; } = DateTime.UtcNow;
 
         public bool IsActive{ get; set; } 
+        public string Email { get; set; }
 
     }
 }
