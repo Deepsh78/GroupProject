@@ -8,5 +8,6 @@ namespace GroupApi.Services.Interface
         void UpdateUser(InsertUserDto userdata, Guid id);
         GetUserDto GetAllUser();
         GetUserDto GetUserById(Guid id);
+        void DeleteUser(Guid id);
     }
 }

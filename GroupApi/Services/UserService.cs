@@ -1,4 +1,5 @@
-﻿using GroupApi.Data;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using GroupApi.Data;
 using GroupApi.Dto;
 using GroupApi.Entities;
 using GroupApi.Services.Interface;
@@ -110,6 +111,25 @@ namespace GroupApi.Services
                     Gender = users.Gender
                 };
                 return result;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+
+            
+        }
+        public void DeleteUser(Guid id)
+        {
+            try
+            {
+                var user = _context.Users.FirstOrDefault(x => x.Id == id);
+                if (user == null)
+                {
+                    throw new Exception("No user found");
+                }
+                _context.Users.Remove(user);
+                _context.SaveChanges();
             }
             catch (Exception ex)
             {
