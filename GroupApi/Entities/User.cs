@@ -16,6 +16,7 @@ namespace GroupApi.Entities
         public string? ImageUrl { get; set; }
         public DateTime RegisterData { get; set; } = DateTime.UtcNow;
 
+        public string Password { get; set; }
         public bool IsActive{ get; set; } 
         public string Email { get; set; }
 
