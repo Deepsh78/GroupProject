@@ -22,8 +22,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Controllers\Book\" />
+    <Folder Include="Dto\Book\" />
     <Folder Include="Migrations\" />
-    <Folder Include="Services\Book\" />
+    <Folder Include="Services\Interface\" />
   </ItemGroup>
 
 </Project>

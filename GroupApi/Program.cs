@@ -1,6 +1,5 @@
 using GroupApi.Data;
-using GroupApi.Services.Book;
-using GroupApi.Services.Interface.Book;
+
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,7 +13,6 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicaionDbContext>(
     d => d.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddScoped<IBookService, BookService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
