@@ -16,6 +16,8 @@
 # Mono auto generated files
 mono_crash.*
 
+/GroupApi/appsettings.json
+/GroupApi/appsettings.Development.json
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
