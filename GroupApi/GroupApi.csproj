@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">
       <PrivateAssets>all</PrivateAssets>
@@ -25,7 +26,9 @@
     <Folder Include="Controllers\Book\" />
     <Folder Include="Dto\Book\" />
     <Folder Include="Migrations\" />
+    <Folder Include="NewFolder\" />
     <Folder Include="Services\Interface\" />
+    <Folder Include="Services\Auth\" />
   </ItemGroup>
 
 </Project>
