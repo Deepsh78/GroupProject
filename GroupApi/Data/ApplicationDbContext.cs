@@ -1,5 +1,4 @@
-﻿// GroupApi.Data/ApplicaionDbContext.cs
-using GroupApi.Entities;
+﻿using GroupApi.Entities;
 using GroupApi.Entities.Auth;
 using GroupApi.Entities.Books;
 using GroupApi.Entities.Oders;
@@ -8,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GroupApi.Data
 {
-    public class ApplicaionDbContext : IdentityDbContext<ApplicationUser>
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        public ApplicaionDbContext(DbContextOptions<ApplicaionDbContext> options) : base(options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
 
@@ -35,6 +34,7 @@ namespace GroupApi.Data
         public DbSet<Review> Reviews { get; set; }
         public DbSet<OtpRecord> OtpRecords { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<PendingUser> PendingUsers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

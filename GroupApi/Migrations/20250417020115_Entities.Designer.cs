@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace GroupApi.Migrations
 {
-    [DbContext(typeof(ApplicaionDbContext))]
+    [DbContext(typeof(ApplicationDbContext))]
     [Migration("20250417020115_Entities")]
     partial class Entities
     {
