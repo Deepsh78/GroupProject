@@ -1,21 +1,21 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace GroupApi.Entities
+namespace GroupApi.Entities.Books
 {
-    [Table("Book_Genre")]
-    public class BookGenre
+    [Table("Book_Format")]
+    public class BookFormat
     {
         [Key]
         [Column(Order = 0)]
-        public Guid BookId { get; set; } // Foreign Key for Book
+        public Guid FormatId { get; set; } // Foreign Key for Format
 
         [Key]
         [Column(Order = 1)]
-        public Guid GenreId { get; set; } // Foreign Key for Genre
+        public Guid BookId { get; set; } // Foreign Key for Book
 
         // Navigation properties
+        public Format Format { get; set; }
         public Book Book { get; set; }
-        public Genre Genre { get; set; }
     }
 }

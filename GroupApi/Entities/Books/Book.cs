@@ -2,7 +2,7 @@ using DocumentFormat.OpenXml.Bibliography;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace GroupApi.Entities
+namespace GroupApi.Entities.Books
 {
     [Table("Book")]
     public class Book

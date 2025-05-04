@@ -1,7 +1,8 @@
+using GroupApi.Entities.Books;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace GroupApi.Entities
+namespace GroupApi.Entities.Oders
 {
     [Table("Order_Item")]
     public class OrderItem

@@ -1,4 +1,5 @@
 using DocumentFormat.OpenXml.Bibliography;
+using GroupApi.Entities.Books;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
