@@ -1,20 +1,20 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace GroupApi.Entities
+namespace GroupApi.Entities.Books
 {
-    [Table("Book_Category")]
-    public class BookCategory
+    [Table("Book_Author")]
+    public class BookAuthor
     {
         [Key]
-       public Guid BookCtegoryId { get; set; } // Primary Key
-        public Guid CategoryId { get; set; } // Foreign Key for Category
+       public Guid BookAuthorId { get; set; } // Primary Key
+        public Guid AuthorId { get; set; } // Foreign Key for Author
 
        
         public Guid BookId { get; set; } // Foreign Key for Book
 
         // Navigation properties
-        public Category Category { get; set; }
+        public Author Author { get; set; }
         public Book Book { get; set; }
     }
 }
