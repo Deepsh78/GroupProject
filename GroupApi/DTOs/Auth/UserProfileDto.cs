@@ -1,4 +1,4 @@
-﻿// GroupApi.DTOs.Auth/UserProfileDto.cs
+﻿using GroupApi.Constants;
 using GroupApi.Constraint;
 
 namespace GroupApi.DTOs.Auth
@@ -11,5 +11,6 @@ namespace GroupApi.DTOs.Auth
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public GenderType Gender { get; set; }
+        public RoleType Role { get; set; }
     }
 }

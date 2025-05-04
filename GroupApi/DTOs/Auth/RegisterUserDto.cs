@@ -1,6 +1,7 @@
 ﻿// GroupApi.DTOs.Auth/RegisterUserDto.cs
 namespace GroupApi.DTOs.Auth
 {
+    using global::GroupApi.Constants;
     using global::GroupApi.Constraint;
     using System.ComponentModel.DataAnnotations;
 
@@ -28,6 +29,7 @@ namespace GroupApi.DTOs.Auth
 
             [Required]
             public GenderType Gender { get; set; }
+            public RoleType Role { get; set; } = RoleType.User;
 
         }
     }

@@ -34,6 +34,7 @@ namespace GroupApi.Data
         public DbSet<Publisher> Publishers { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<OtpRecord> OtpRecords { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

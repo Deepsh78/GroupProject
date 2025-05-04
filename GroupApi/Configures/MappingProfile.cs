@@ -1,9 +1,6 @@
-﻿// GroupApi.Configures/MappingProfile.cs
-using AutoMapper;
+﻿using AutoMapper;
 using GroupApi.DTOs.Auth;
 using GroupApi.Entities.Auth;
-using Microsoft.AspNetCore.Identity;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace GroupApi.Configures
 {
@@ -17,7 +14,8 @@ namespace GroupApi.Configures
                 .ForMember(dest => dest.EmailConfirmed, opt => opt.MapFrom(src => src.EmailConfirmed))
                 .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
                 .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
-                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Gender));
+                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Gender))
+                .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role));
         }
     }
 }

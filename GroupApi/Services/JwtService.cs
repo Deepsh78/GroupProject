@@ -1,10 +1,9 @@
-﻿// GroupApi.Services/JwtService.cs
-using GroupApi.Entities.Auth;
+﻿using GroupApi.Entities.Auth;
 using GroupApi.Services.Interface;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace GroupApi.Services
@@ -22,10 +21,10 @@ namespace GroupApi.Services
         {
             var claims = new[]
             {
-            new Claim("sub", user.Id),
-            new Claim(ClaimTypes.Name, user.Email),
-            new Claim(ClaimTypes.Role, "User")
-        };
+                new Claim("sub", user.Id),
+                new Claim(ClaimTypes.Name, user.Email),
+                new Claim(ClaimTypes.Role, user.Role.ToString())
+            };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -38,6 +37,20 @@ namespace GroupApi.Services
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
+        }
+
+        public bool ValidateRefreshToken(ApplicationUser user, string refreshToken)
+        {
+            return user.RefreshToken == refreshToken &&
+                   user.RefreshTokenExpiry > DateTime.UtcNow;
         }
     }
 }

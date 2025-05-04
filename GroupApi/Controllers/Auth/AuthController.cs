@@ -1,6 +1,4 @@
-﻿// GroupApi.Controllers.Auth/AuthController.cs
-using AutoMapper;
-using DocumentFormat.OpenXml.Spreadsheet;
+﻿using AutoMapper;
 using GroupApi.Data;
 using GroupApi.DTOs.Auth;
 using GroupApi.DTOs.Auth.GroupApi.DTOs.Auth;
@@ -10,7 +8,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Crypto;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace GroupApi.Controllers.Auth
 {
@@ -24,6 +26,7 @@ namespace GroupApi.Controllers.Auth
         private readonly IEmailService _emailService;
         private readonly IJwtService _jwtService;
         private readonly IMapper _mapper;
+        private readonly IConfiguration _configuration;  // Added IConfiguration field
 
         public AuthController(
             UserManager<ApplicationUser> userManager,
@@ -31,7 +34,8 @@ namespace GroupApi.Controllers.Auth
             ApplicaionDbContext context,
             IEmailService emailService,
             IJwtService jwtService,
-            IMapper mapper)
+            IMapper mapper,
+            IConfiguration configuration)  // Added IConfiguration to constructor
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -39,6 +43,7 @@ namespace GroupApi.Controllers.Auth
             _emailService = emailService;
             _jwtService = jwtService;
             _mapper = mapper;
+            _configuration = configuration;  // Initialize the field
         }
 
         [HttpPost("register")]
@@ -53,7 +58,7 @@ namespace GroupApi.Controllers.Auth
                 Email = registerDto.Email,
                 FirstName = registerDto.FirstName,
                 LastName = registerDto.LastName,
-                Gender = registerDto.Gender // Assign Gender from DTO
+                Gender = registerDto.Gender
             };
             var result = await _userManager.CreateAsync(user, registerDto.Password);
 
@@ -61,7 +66,7 @@ namespace GroupApi.Controllers.Auth
                 return BadRequest(new { message = string.Join(", ", result.Errors.Select(e => e.Description)) });
 
             var otp = GenerateOtp();
-            var otpRecord = new Entities.Auth.OtpRecord
+            var otpRecord = new OtpRecord
             {
                 UserId = user.Id,
                 Code = otp,
@@ -78,6 +83,7 @@ namespace GroupApi.Controllers.Auth
 
             return Ok(new { message = "Registration initiated, please verify your email" });
         }
+
         [HttpPost("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromBody] VerifyOtpDto verifyOtpDto)
         {
@@ -98,10 +104,16 @@ namespace GroupApi.Controllers.Auth
             await _context.SaveChangesAsync();
 
             var token = _jwtService.GenerateToken(user);
+            var refreshToken = _jwtService.GenerateRefreshToken();
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            await _userManager.UpdateAsync(user);
+
             return Ok(new
             {
                 message = "Email verified successfully",
                 token,
+                refreshToken,
                 user = _mapper.Map<UserProfileDto>(user)
             });
         }
@@ -118,9 +130,41 @@ namespace GroupApi.Controllers.Auth
                 return BadRequest(new { message = "Invalid login attempt" });
 
             var token = _jwtService.GenerateToken(user);
+            var refreshToken = _jwtService.GenerateRefreshToken();
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            await _userManager.UpdateAsync(user);
+
             return Ok(new
             {
                 token,
+                refreshToken,
+                user = _mapper.Map<UserProfileDto>(user)
+            });
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto refreshTokenDto)
+        {
+            var principal = GetPrincipalFromExpiredToken(refreshTokenDto.Token);
+            if (principal == null)
+                return BadRequest(new { message = "Invalid token" });
+
+            var userId = principal.FindFirst("sub")?.Value;
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || !_jwtService.ValidateRefreshToken(user, refreshTokenDto.RefreshToken))
+                return BadRequest(new { message = "Invalid refresh token" });
+
+            var newToken = _jwtService.GenerateToken(user);
+            var newRefreshToken = _jwtService.GenerateRefreshToken();
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            await _userManager.UpdateAsync(user);
+
+            return Ok(new
+            {
+                token = newToken,
+                refreshToken = newRefreshToken,
                 user = _mapper.Map<UserProfileDto>(user)
             });
         }
@@ -133,7 +177,7 @@ namespace GroupApi.Controllers.Auth
                 return BadRequest(new { message = "Email not found" });
 
             var otp = GenerateOtp();
-            var otpRecord = new Entities.Auth.OtpRecord
+            var otpRecord = new OtpRecord
             {
                 UserId = user.Id,
                 Code = otp,
@@ -215,6 +259,33 @@ namespace GroupApi.Controllers.Auth
         {
             var random = new Random();
             return random.Next(100000, 999999).ToString();
+        }
+
+        private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+        {
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false,
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])),
+                ValidateLifetime = false // Allow expired tokens
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            try
+            {
+                var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+                if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+                    !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                    return null;
+
+                return principal;
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }
