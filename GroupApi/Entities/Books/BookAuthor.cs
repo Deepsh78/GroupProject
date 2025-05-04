@@ -7,11 +7,10 @@ namespace GroupApi.Entities.Books
     public class BookAuthor
     {
         [Key]
-        [Column(Order = 0)]
+       public Guid BookAuthorId { get; set; } // Primary Key
         public Guid AuthorId { get; set; } // Foreign Key for Author
 
-        [Key]
-        [Column(Order = 1)]
+       
         public Guid BookId { get; set; } // Foreign Key for Book
 
         // Navigation properties

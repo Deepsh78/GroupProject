@@ -7,11 +7,9 @@ namespace GroupApi.Entities.Books
     public class BookGenre
     {
         [Key]
-        [Column(Order = 0)]
+        public Guid BookGenreId { get; set; } // Primary Key
         public Guid BookId { get; set; } // Foreign Key for Book
 
-        [Key]
-        [Column(Order = 1)]
         public Guid GenreId { get; set; } // Foreign Key for Genre
 
         // Navigation properties
