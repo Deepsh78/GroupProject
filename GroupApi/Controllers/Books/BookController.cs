@@ -53,6 +53,12 @@ namespace GroupApi.Controllers.Books
             var result = await _bookService.DeleteAsync(id);
             return result.IsSuccess ? NoContent() : StatusCode((int)result.Error!.StatusCode, result);
         }
+        [HttpGet("filtered-books")]
+        public async Task<IActionResult> GetFilteredBooks([FromQuery] BookFilterDto filter)
+        {
+            var result = await _bookService.GetFilteredBooksAsync(filter);
+            return Ok(result);
+        }
     }
 
 }
