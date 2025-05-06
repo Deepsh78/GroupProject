@@ -3,7 +3,7 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 
-namespace GroupApi.Services
+namespace GroupApi.Services.Email
 {
     public class EmailService : IEmailService
     {

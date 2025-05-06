@@ -7,7 +7,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace GroupApi.Services
+namespace GroupApi.Services.Authorization
 {
     public class JwtService : IJwtService
     {

@@ -1,7 +1,6 @@
 using GroupApi.Data;
 using GroupApi.Entities.Auth;
 using GroupApi.GenericClasses;
-using GroupApi.Services;
 using GroupApi.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -10,6 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Microsoft.AspNetCore.Diagnostics;
+using GroupApi.Services.Authorization;
+using GroupApi.Services.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 

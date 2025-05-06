@@ -6,7 +6,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace GroupApi.Services
+namespace GroupApi.Services.Authorization
 {
     public class OtpCleanupService : BackgroundService
     {

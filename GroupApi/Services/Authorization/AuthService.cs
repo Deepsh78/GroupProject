@@ -12,7 +12,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace GroupApi.Services
+namespace GroupApi.Services.Authorization
 {
     public class AuthService : IAuthService
     {
