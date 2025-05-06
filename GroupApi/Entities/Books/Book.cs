@@ -21,6 +21,11 @@ namespace GroupApi.Entities.Books
 
         // Navigation property
         public Publisher Publisher { get; set; }
+        public int Stock { get; set; } // To support availability filter
+        public DateTime PublicationDate { get; set; } // For "New Releases"
+        public DateTime CreatedAt { get; set; } // For "New Arrivals"
+        public bool IsComingSoon { get; set; } // For "Coming Soon" tab
+
     }
 
 }
