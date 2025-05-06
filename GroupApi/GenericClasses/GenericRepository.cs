@@ -5,9 +5,9 @@ namespace GroupApi.GenericClasses
 {
     public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : class
     {
-        private readonly ApplicaionDbContext _dbContext;
+        private readonly ApplicationDbContext _dbContext;
         private DbSet<TEntity> _entity;
-        public GenericRepository(ApplicaionDbContext dbContext)
+        public GenericRepository(ApplicationDbContext dbContext)
         {
             _dbContext = dbContext;
             _entity = _dbContext.Set<TEntity>();
