@@ -7,7 +7,7 @@ namespace GroupApi.Controllers.Publisher
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")]
+ 
     public class PublisherController : ControllerBase
     {
         private readonly IPublisherService _publisherService;
