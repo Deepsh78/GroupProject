@@ -13,6 +13,7 @@ namespace GroupApi.Services.Interface
         Task<GenericResponse<BookReadDto?>> UpdateAsync(Guid id, BookUpdateDto dto);
         Task<Response> DeleteAsync(Guid id);
         Task<PaginatedList<BookReadDto>> GetFilteredBooksAsync(BookFilterDto filter);
+        Task<BookDetailDto?> GetBookDetailAsync(Guid id);
     }
 
 

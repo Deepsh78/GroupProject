@@ -120,6 +120,35 @@ namespace GroupApi.Services.Books
                 }
             }
         }
+        public async Task<BookDetailDto?> GetBookDetailAsync(Guid id)
+        {
+            var book = await _bookRepo.TableNoTracking
+                .Include(b => b.Publisher)
+                .Include(b => b.BookAuthors).ThenInclude(ba => ba.Author)
+                .Include(b => b.BookGenres).ThenInclude(bg => bg.Genre)
+                .Include(b => b.BookFormats).ThenInclude(bf => bf.Format)
+                .Include(b => b.BookCategories).ThenInclude(bc => bc.Category)
+                .FirstOrDefaultAsync(b => b.BookId == id);
+
+            if (book == null) return null;
+
+            return new BookDetailDto
+            {
+                BookId = book.BookId,
+                BookName = book.BookName,
+                ISBN = book.ISBN,
+                Price = book.Price,
+                Description = book.Description,
+                Language = book.Language,
+                Stock = book.Stock,
+                PublisherName = book.Publisher?.Name ?? "",
+                Authors = book.BookAuthors.Select(ba => ba.Author.Name).ToList(),
+                Genres = book.BookGenres.Select(bg => bg.Genre.Name).ToList(),
+                Formats = book.BookFormats.Select(bf => bf.Format.Name).ToList(),
+                Categories = book.BookCategories.Select(bc => bc.Category.Name).ToList()
+            };
+        }
+
         public async Task<GenericResponse<BookReadDto?>> UpdateAsync(Guid id, BookUpdateDto dto)
         {
             var book = await _bookRepo.GetByIdAsync(id);

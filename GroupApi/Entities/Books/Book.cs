@@ -25,6 +25,10 @@ namespace GroupApi.Entities.Books
         public DateTime PublicationDate { get; set; } // For "New Releases"
         public DateTime CreatedAt { get; set; } // For "New Arrivals"
         public bool IsComingSoon { get; set; } // For "Coming Soon" tab
+        public ICollection<BookAuthor> BookAuthors { get; set; }
+        public ICollection<BookGenre> BookGenres { get; set; }
+        public ICollection<BookFormat> BookFormats { get; set; }
+        public ICollection<BookCategory> BookCategories { get; set; }
 
     }
 

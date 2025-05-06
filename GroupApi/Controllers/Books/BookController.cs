@@ -59,6 +59,15 @@ namespace GroupApi.Controllers.Books
             var result = await _bookService.GetFilteredBooksAsync(filter);
             return Ok(result);
         }
+        [HttpGet("{id}/details")]
+        public async Task<IActionResult> GetBookDetail(Guid id)
+        {
+            var result = await _bookService.GetBookDetailAsync(id);
+            return result == null
+                ? NotFound(new { message = "Book not found" })
+                : Ok(result);
+        }
+
     }
 
 }
