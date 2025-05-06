@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using GroupApi.Services.Authorization;
 using GroupApi.Services.Email;
 using GroupApi.Services.Books;
+using GroupApi.Services.Publishers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -127,6 +128,8 @@ builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddTransient<IJwtService, JwtService>();
 builder.Services.AddTransient<IAuthService, AuthService>();
+builder.Services.AddScoped<IPublisherService, PublisherService>();
+
 builder.Services.AddHostedService<OtpCleanupService>();
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
