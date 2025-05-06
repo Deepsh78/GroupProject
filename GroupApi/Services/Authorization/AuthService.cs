@@ -181,7 +181,7 @@ namespace GroupApi.Services.Authorization
                     EmailConfirmed = true
                 };
 
-                var result = await _userManager.CreateAsync(user, "@Sumit123"); // Use the original password
+                var result = await _userManager.CreateAsync(user); 
                 if (!result.Succeeded)
                     return new BadRequestObjectResult(new { message = string.Join(", ", result.Errors.Select(e => e.Description)) });
 

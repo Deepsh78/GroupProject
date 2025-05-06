@@ -130,6 +130,7 @@ builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddTransient<IJwtService, JwtService>();
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddScoped<IPublisherService, PublisherService>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddHostedService<OtpCleanupService>();
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);

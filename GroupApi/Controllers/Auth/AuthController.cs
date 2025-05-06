@@ -1,6 +1,9 @@
 ﻿using GroupApi.DTOs.Auth;
+using GroupApi.Entities.Auth;
+using GroupApi.Services.CurrentUser;
 using GroupApi.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GroupApi.Controllers.Auth
@@ -10,10 +13,14 @@ namespace GroupApi.Controllers.Auth
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly ICurrentUserService _currentUserService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, ICurrentUserService currentUserService, UserManager<ApplicationUser> userManager)
         {
             _authService = authService;
+            _currentUserService = currentUserService;
+            _userManager = userManager;
         }
 
         [HttpPost("register")]
@@ -110,6 +117,29 @@ namespace GroupApi.Controllers.Auth
                 return Unauthorized(new { message = "User not authenticated" });
 
             return await _authService.ChangePasswordAsync(userId, changePasswordDto);
+        }
+
+        [HttpGet("/me")]
+        public async Task<IActionResult> Me()
+        {
+            var userId = _currentUserService.UserId;
+
+            if (userId == Guid.Empty)
+                return Unauthorized(new { message = "User not logged in" });
+
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+
+            return Ok(new
+            {
+                user.Id,
+                user.Email,
+                user.UserName,
+                user.PhoneNumber
+                // Add more properties if needed
+            });
         }
     }
 }
