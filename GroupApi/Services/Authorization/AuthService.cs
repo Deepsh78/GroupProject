@@ -220,7 +220,7 @@ namespace GroupApi.Services.Authorization
 
                 var isPasswordValid = await _userManager.CheckPasswordAsync(user, loginDto.Password);
                 if (isPasswordValid == false)
-                    return new NotFoundObjectResult(new { message = "Book not found" });
+                    return new NotFoundObjectResult(new { message = "Invalid Password!!" });
 
                 var token = _jwtService.GenerateToken(user);
                 var refreshToken = _jwtService.GenerateRefreshToken();
