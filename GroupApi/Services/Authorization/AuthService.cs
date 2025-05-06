@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using GroupApi.CommonDomain;
 using GroupApi.Data;
 using GroupApi.DTOs.Auth;
 using GroupApi.Entities.Auth;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq.Expressions;
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 
@@ -216,9 +218,9 @@ namespace GroupApi.Services.Authorization
                 if (user == null || !user.EmailConfirmed)
                     return new BadRequestObjectResult(new { message = "Invalid login attempt or email not verified" });
 
-                var result = await _signInManager.PasswordSignInAsync(loginDto.Email, loginDto.Password, false, false);
-                if (!result.Succeeded)
-                    return new BadRequestObjectResult(new { message = "Invalid login attempt" });
+                var isPasswordValid = await _userManager.CheckPasswordAsync(user, loginDto.Password);
+                if (isPasswordValid == false)
+                    return new NotFoundObjectResult(new { message = "Book not found" });
 
                 var token = _jwtService.GenerateToken(user);
                 var refreshToken = _jwtService.GenerateRefreshToken();
@@ -235,11 +237,9 @@ namespace GroupApi.Services.Authorization
             }
             catch (Exception ex)
             {
-
                 Console.WriteLine($"Login error: {ex.Message}\n{ex.StackTrace}");
                 throw;
             }
-        
         }
 
         public async Task<IActionResult> RefreshTokenAsync(RefreshTokenDto refreshTokenDto)
