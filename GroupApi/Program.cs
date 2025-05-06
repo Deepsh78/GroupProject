@@ -1,5 +1,6 @@
 using GroupApi.Data;
 using GroupApi.Entities.Auth;
+using GroupApi.GenericClasses;
 using GroupApi.Services;
 using GroupApi.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -48,8 +49,10 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAutoMapper(typeof(Program));
 
 // Add Services
+
 builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddTransient<IJwtService, JwtService>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration); 
 
 var app = builder.Build();
