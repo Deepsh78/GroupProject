@@ -166,12 +166,12 @@ namespace GroupApi.Services.Books
             await _bookRepo.SaveChangesAsync();
             return new Response();
         }
-    }
-    public async Task<PaginatedList<BookReadDto>> GetFilteredBooksSimpleAsync(BookFilterDto filter)
+
+        public async Task<PaginatedList<BookReadDto>> GetFilteredBooksAsync(BookFilterDto filter)
         {
             var query = _bookRepo.TableNoTracking
                 .Include(b => b.Publisher)
-                .Include(b => b.BookCategories)
+          
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
@@ -182,35 +182,10 @@ namespace GroupApi.Services.Books
                     b.ISBN.Contains(filter.SearchTerm));
             }
 
-            if (filter.GenreId.HasValue)
-                query = query.Where(b => b.BookGenres.Any(bg => bg.GenreId == filter.GenreId.Value));
-
-            if (filter.FormatId.HasValue)
-                query = query.Where(b => b.BookFormats.Any(bf => bf.FormatId == filter.FormatId.Value));
-
-            if (filter.CategoryId.HasValue)
-                query = query.Where(b => b.BookCategories.Any(bc => bc.CategoryId == filter.CategoryId.Value));
-
-            if (filter.PublisherId.HasValue)
-                query = query.Where(b => b.PublisherId == filter.PublisherId.Value);
-
-            if (!string.IsNullOrWhiteSpace(filter.Language))
-                query = query.Where(b => b.Language.ToLower() == filter.Language.ToLower());
-
-            if (filter.MinPrice.HasValue)
-                query = query.Where(b => b.Price >= filter.MinPrice.Value);
-
-            if (filter.MaxPrice.HasValue)
-                query = query.Where(b => b.Price <= filter.MaxPrice.Value);
-
-            // Sorting
-            query = filter.SortBy?.ToLower() switch
-            {
-                "title" => filter.Descending ? query.OrderByDescending(b => b.BookName) : query.OrderBy(b => b.BookName),
-                "price" => filter.Descending ? query.OrderByDescending(b => b.Price) : query.OrderBy(b => b.Price),
-                "createdat" => filter.Descending ? query.OrderByDescending(b => b.CreatedAt) : query.OrderBy(b => b.CreatedAt),
-                _ => query.OrderBy(b => b.BookName)
-            };
+         
+            query = filter.SortByPriceDescending
+                ? query.OrderByDescending(b => b.Price)
+                : query.OrderBy(b => b.Price);
 
             var projection = query.Select(b => new BookReadDto
             {
@@ -220,11 +195,11 @@ namespace GroupApi.Services.Books
                 Price = b.Price,
                 Description = b.Description,
                 Language = b.Language,
-                Stock = b.Stock,
-                PublisherName = b.Publisher!.Name
+                PublisherName = b.Publisher.Name
             });
 
             return await projection.ToPagedListAsync(filter.Page, filter.PageSize);
         }
-
+    }
+   
     }
