@@ -181,25 +181,23 @@ namespace GroupApi.Services.Authorization
                     EmailConfirmed = true
                 };
 
-                var result = await _userManager.CreateAsync(user); 
+                // Create user with the stored password hash
+                var result = await _userManager.CreateAsync(user);
                 if (!result.Succeeded)
                     return new BadRequestObjectResult(new { message = string.Join(", ", result.Errors.Select(e => e.Description)) });
+
+                // Set the password using the stored hash
+                var passwordHasher = new PasswordHasher<ApplicationUser>();
+                user.PasswordHash = pendingUser.PasswordHash;
+                await _userManager.UpdateAsync(user);
 
                 _context.PendingUsers.Remove(pendingUser);
                 _context.OtpRecords.Remove(otpRecord);
                 await _context.SaveChangesAsync();
 
-                var token = _jwtService.GenerateToken(user);
-                var refreshToken = _jwtService.GenerateRefreshToken();
-                user.RefreshToken = refreshToken;
-                user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
-                await _userManager.UpdateAsync(user);
-
                 return new OkObjectResult(new
                 {
-                    message = "Email verified successfully",
-                    token,
-                    refreshToken,
+                    message = "Email verified successfully. Please proceed to login.",
                     user = _mapper.Map<UserProfileDto>(user)
                 });
             }
