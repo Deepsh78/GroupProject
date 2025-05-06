@@ -11,6 +11,7 @@ using System.Text;
 using Microsoft.AspNetCore.Diagnostics;
 using GroupApi.Services.Authorization;
 using GroupApi.Services.Email;
+using GroupApi.Services.Books;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -129,6 +130,7 @@ builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddHostedService<OtpCleanupService>();
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration); 
 
 var app = builder.Build();
