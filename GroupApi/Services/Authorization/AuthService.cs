@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Text;
 
@@ -209,26 +210,36 @@ namespace GroupApi.Services.Authorization
 
         public async Task<IActionResult> LoginAsync(LoginUserDto loginDto)
         {
-            var user = await _userManager.FindByEmailAsync(loginDto.Email);
-            if (user == null || !user.EmailConfirmed)
-                return new BadRequestObjectResult(new { message = "Invalid login attempt or email not verified" });
-
-            var result = await _signInManager.PasswordSignInAsync(loginDto.Email, loginDto.Password, false, false);
-            if (!result.Succeeded)
-                return new BadRequestObjectResult(new { message = "Invalid login attempt" });
-
-            var token = _jwtService.GenerateToken(user);
-            var refreshToken = _jwtService.GenerateRefreshToken();
-            user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
-            await _userManager.UpdateAsync(user);
-
-            return new OkObjectResult(new
+            try
             {
-                token,
-                refreshToken,
-                user = _mapper.Map<UserProfileDto>(user)
-            });
+                var user = await _userManager.FindByEmailAsync(loginDto.Email);
+                if (user == null || !user.EmailConfirmed)
+                    return new BadRequestObjectResult(new { message = "Invalid login attempt or email not verified" });
+
+                var result = await _signInManager.PasswordSignInAsync(loginDto.Email, loginDto.Password, false, false);
+                if (!result.Succeeded)
+                    return new BadRequestObjectResult(new { message = "Invalid login attempt" });
+
+                var token = _jwtService.GenerateToken(user);
+                var refreshToken = _jwtService.GenerateRefreshToken();
+                user.RefreshToken = refreshToken;
+                user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+                await _userManager.UpdateAsync(user);
+
+                return new OkObjectResult(new
+                {
+                    token,
+                    refreshToken,
+                    user = _mapper.Map<UserProfileDto>(user)
+                });
+            }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine($"Login error: {ex.Message}\n{ex.StackTrace}");
+                throw;
+            }
+        
         }
 
         public async Task<IActionResult> RefreshTokenAsync(RefreshTokenDto refreshTokenDto)
