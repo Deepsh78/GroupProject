@@ -1,5 +1,6 @@
 ﻿using GroupApi.Entities.Auth;
 using GroupApi.Services.Interface;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -19,9 +20,12 @@ namespace GroupApi.Services
 
         public string GenerateToken(ApplicationUser user)
         {
+            Console.WriteLine($"Generating token with key: {_configuration["Jwt:Key"]}");
+            Console.WriteLine($"Issuer: {_configuration["Jwt:Issuer"]}, Audience: {_configuration["Jwt:Audience"]}");
+
             var claims = new[]
             {
-                new Claim("sub", user.Id),
+                new Claim("sub", user.Id), // Matches NameClaimType = "sub" in Program.cs
                 new Claim(ClaimTypes.Name, user.Email),
                 new Claim(ClaimTypes.Role, user.Role.ToString())
             };
