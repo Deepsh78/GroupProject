@@ -1,19 +1,17 @@
-﻿using GroupApi.DTOs.Auth;
-using GroupApi.Entities.Auth;
-using Microsoft.AspNetCore.Mvc;
+﻿using GroupApi.CommonDomain;
+using GroupApi.DTOs.Auth;
 
 namespace GroupApi.Services.Interface
 {
     public interface IAuthService
     {
-        Task<IActionResult> RegisterAsync(RegisterUserDto registerDto);
-        Task<IActionResult> VerifyEmailAsync(VerifyOtpDto verifyOtpDto);
-        Task<IActionResult> ResendOtpAsync(ForgotPasswordDto resendOtpDto);
-        Task<IActionResult> LoginAsync(LoginUserDto loginDto);
-        Task<IActionResult> RefreshTokenAsync(RefreshTokenDto refreshTokenDto);
-        Task<IActionResult> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto);
-        Task<IActionResult> VerifyOtpAsync(VerifyOtpDto verifyOtpDto);
-        Task<IActionResult> ResetPasswordAsync(ResetPasswordDto resetPasswordDto);
-        Task<IActionResult> ChangePasswordAsync(string userId, ChangePasswordDto changePasswordDto);
+        Task<bool> RegisterAsync(RegisterDto model);
+        Task<bool> VerifyOtpAsync(VerifyOtpDto model);
+        Task<string> LoginAsync(LoginDto model);
+        Task<bool> ForgotPasswordAsync(ForgotPasswordDto model);
+        Task<bool> VerifyPasswordResetOtpAsync(VerifyOtpDto model);
+        Task<bool> ResetPasswordAsync(ResetPasswordDto model);
+        Task<bool> AssignStaffRoleAsync(string userId, string adminId);
+        Task<bool> ResendOtpAsync(ResendOtpDto model);
     }
 }

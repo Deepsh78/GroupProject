@@ -13,7 +13,11 @@ namespace GroupApi.Data
         {
         }
 
-        // DbSet properties for all entities
+        // DbSet properties for authentication entities
+        public DbSet<TempUserRegistration> TempUserRegistrations { get; set; }
+        public DbSet<TempPasswordReset> TempPasswordResets { get; set; }
+
+        // DbSet properties for all other entities
         public DbSet<Author> Authors { get; set; }
         public DbSet<Book> Books { get; set; }
         public DbSet<BookAuthor> BookAuthors { get; set; }
@@ -32,9 +36,6 @@ namespace GroupApi.Data
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Publisher> Publishers { get; set; }
         public DbSet<Review> Reviews { get; set; }
-        public DbSet<OtpRecord> OtpRecords { get; set; }
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
-        public DbSet<PendingUser> PendingUsers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -55,11 +56,6 @@ namespace GroupApi.Data
             // Define composite key for BookGenre
             modelBuilder.Entity<BookGenre>()
                 .HasKey(bg => new { bg.BookId, bg.GenreId });
-        }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            base.OnConfiguring(optionsBuilder);
         }
     }
 }
