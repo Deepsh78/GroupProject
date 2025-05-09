@@ -1,7 +1,5 @@
 ﻿using GroupApi.Services.Interface;
-using MailKit.Net.Smtp;
-using MailKit.Security;
-using MimeKit;
+using System.Net.Mail;
 
 namespace GroupApi.Services.Email
 {
@@ -14,41 +12,34 @@ namespace GroupApi.Services.Email
             _configuration = configuration;
         }
 
-        public async Task SendEmailAsync(string to, string subject, string body)
+        public async Task SendOtpEmailAsync(string email, string otp, string purpose)
         {
-            try
+            string subject = purpose == "registration" ? "Verify Your Account" : "Password Reset OTP";
+            string body = $"Your OTP for {purpose} is: {otp}. It will expire in 10 minutes.";
+            await SendEmailAsync(email, subject, body);
+        }
+
+        private async Task SendEmailAsync(string toEmail, string subject, string body)
+        {
+            var smtpClient = new SmtpClient(_configuration["EmailSettings:SmtpServer"])
             {
-                var email = new MimeMessage();
-                email.From.Add(new MailboxAddress(
-                    _configuration["EmailSettings:SenderName"],
-                    _configuration["EmailSettings:SenderEmail"]));
-                email.To.Add(new MailboxAddress("", to));
-                email.Subject = subject;
-                email.Body = new TextPart("html") { Text = body };
-
-                using var client = new SmtpClient();
-                await client.ConnectAsync(
-                    _configuration["EmailSettings:SmtpServer"],
-                    int.Parse(_configuration["EmailSettings:SmtpPort"]),
-                    SecureSocketOptions.StartTls);
-
-                await client.AuthenticateAsync(
+                Port = int.Parse(_configuration["EmailSettings:SmtpPort"]),
+                Credentials = new System.Net.NetworkCredential(
                     _configuration["EmailSettings:Username"],
-                    _configuration["EmailSettings:Password"]);
+                    _configuration["EmailSettings:Password"]),
+                EnableSsl = true
+            };
 
-                await client.SendAsync(email);
-                await client.DisconnectAsync(true);
-            }
-            catch (Exception ex)
+            var mailMessage = new MailMessage
             {
-                Console.WriteLine($"Failed to send email to {to}: {ex.Message}");
-                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-                }
-                throw new InvalidOperationException($"Failed to send email: {ex.Message}", ex);
-            }
+                From = new MailAddress(_configuration["EmailSettings:SenderEmail"], _configuration["EmailSettings:SenderName"]),
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = false
+            };
+            mailMessage.To.Add(toEmail);
+
+            await smtpClient.SendMailAsync(mailMessage);
         }
     }
 }

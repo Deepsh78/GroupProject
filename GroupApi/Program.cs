@@ -1,19 +1,21 @@
-using GroupApi.Data;
-using GroupApi.Entities.Auth;
-using GroupApi.GenericClasses;
-using GroupApi.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using Microsoft.AspNetCore.Diagnostics;
-using GroupApi.Services.Authorization;
+using GroupApi.Data;
+using GroupApi.Entities.Auth;
+using GroupApi.GenericClasses;
+using GroupApi.Services.Interface;
 using GroupApi.Services.Email;
 using GroupApi.Services.Books;
 using GroupApi.Services.Publishers;
 using GroupApi.Services.CurrentUser;
+using GroupApi.Configures;
+using AutoMapper;
+using Microsoft.AspNetCore.Diagnostics;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,11 +26,12 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme. Enter your token in the text input below.\nExample: 'Bearer {token}'",
+        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer { IPs token}'",
         Name = "Authorization",
         In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -63,7 +66,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// Configure JWT Authentication with events for debugging
+// Configure JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -71,10 +74,6 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    var key = builder.Configuration["Jwt:Key"];
-    Console.WriteLine($"Validating token with key: {key}");
-    Console.WriteLine($"Issuer: {builder.Configuration["Jwt:Issuer"]}, Audience: {builder.Configuration["Jwt:Audience"]}");
-
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -83,10 +82,9 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
-        // Fix: Map 'sub' to NameIdentifier so User.FindFirst("sub") works
-        NameClaimType = "sub", // Changed to match token claim directly
-        RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+        NameClaimType = "sub", // Maps 'sub' to ClaimTypes.NameIdentifier
+        RoleClaimType = ClaimTypes.Role // Maps 'role' to ClaimTypes.Role
     };
     options.Events = new JwtBearerEvents
     {
@@ -94,18 +92,11 @@ builder.Services.AddAuthentication(options =>
         {
             Console.WriteLine($"Authentication failed: {context.Exception.Message}");
             Console.WriteLine($"Token: {context.Request.Headers["Authorization"]}");
-            Console.WriteLine($"Exception Details: {context.Exception.StackTrace}");
             return Task.CompletedTask;
         },
         OnTokenValidated = context =>
         {
             Console.WriteLine($"Token validated for user: {context.Principal?.Identity?.Name}");
-            Console.WriteLine($"Claims: {string.Join(", ", context.Principal?.Claims.Select(c => $"{c.Type}: {c.Value}"))}");
-            return Task.CompletedTask;
-        },
-        OnMessageReceived = context =>
-        {
-            Console.WriteLine($"Message received with Authorization header: {context.Request.Headers["Authorization"]}");
             return Task.CompletedTask;
         }
     };
@@ -116,27 +107,22 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", builder =>
     {
-        builder.AllowAnyOrigin()
-               .AllowAnyMethod()
-               .AllowAnyHeader();
+        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
 });
 
 // Add AutoMapper
-builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // Add Services
-builder.Services.AddTransient<IEmailService, EmailService>();
-builder.Services.AddTransient<IJwtService, JwtService>();
-builder.Services.AddTransient<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPublisherService, PublisherService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-builder.Services.AddHostedService<OtpCleanupService>();
-builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IBookService, BookService>();
-builder.Services.AddSingleton<IConfiguration>(builder.Configuration); 
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 var app = builder.Build();
 
@@ -152,15 +138,12 @@ if (app.Environment.IsDevelopment())
             context.Response.StatusCode = 500;
             context.Response.ContentType = "application/json";
             var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
-            var exception = exceptionHandlerPathFeature?.Error;
             var errorResponse = new
             {
                 message = "An unexpected error occurred.",
-                detail = exception?.Message,
-                stackTrace = exception?.StackTrace
+                detail = exceptionHandlerPathFeature?.Error?.Message
             };
             await context.Response.WriteAsJsonAsync(errorResponse);
-            Console.WriteLine($"Error: {exception?.Message}\nStackTrace: {exception?.StackTrace}");
         });
     });
 }
@@ -172,7 +155,7 @@ else
         {
             context.Response.StatusCode = 500;
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync("{\"message\": \"An unexpected error occurred. Please try again later.\"}");
+            await context.Response.WriteAsync("{\"message\": \"An unexpected error occurred.\"}");
         });
     });
 }
