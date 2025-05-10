@@ -1,109 +1,62 @@
 ﻿using GroupApi.CommonDomain;
+using GroupApi.Constants;
+using GroupApi.Data;
 using GroupApi.DTOs.Orders;
-using GroupApi.Entities;
+using GroupApi.Entities.Auth;
 using GroupApi.Entities.Oders;
-using GroupApi.Entities.Orders;
 using GroupApi.GenericClasses;
 using GroupApi.Services.Interface;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
-using System.Security.Cryptography;
+using System.Threading.Tasks;
 
 namespace GroupApi.Services.Orders
 {
     public class OrderService : IOrderService
     {
-        private readonly IGenericRepository<ClaimCode> _claimCodeRepo;
         private readonly IGenericRepository<Order> _orderRepo;
-        private readonly IGenericRepository<Member> _memberRepo;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ApplicationDbContext _context;
 
         public OrderService(
-            IGenericRepository<ClaimCode> claimCodeRepo,
             IGenericRepository<Order> orderRepo,
-            IGenericRepository<Member> memberRepo)
+            UserManager<ApplicationUser> userManager,
+            ApplicationDbContext context)
         {
-            _claimCodeRepo = claimCodeRepo;
             _orderRepo = orderRepo;
-            _memberRepo = memberRepo;
+            _userManager = userManager;
+            _context = context;
         }
 
-        public async Task<GenericResponse<ClaimCodeDto>> GenerateClaimCodeAsync(Guid orderId)
+        public async Task<GenericResponse<bool>> ProcessClaimCodeAsync(ProcessClaimCodeDto dto, string staffId)
         {
-            var order = await _orderRepo.GetByIdAsync(orderId);
+            // Verify staff role
+            var staff = await _userManager.FindByIdAsync(staffId);
+            if (staff == null || staff.Role != RoleType.Staff)
+                return new ErrorModel(HttpStatusCode.Forbidden, "Only staff can process claim codes");
+
+            // Find the order
+            var order = await _orderRepo.Table
+                .FirstOrDefaultAsync(o => o.OrderId == dto.OrderId);
+
             if (order == null)
                 return new ErrorModel(HttpStatusCode.NotFound, "Order not found");
 
-            // Generate a unique 8-character claim code
-            var code = GenerateClaimCode();
-            var claimCode = new ClaimCode
-            {
-                ClaimCodeId = Guid.NewGuid(),
-                Code = code,
-                OrderId = orderId,
-                CreatedAt = DateTime.UtcNow
-            };
+            // Verify claim code
+            if (order.ClaimCode != dto.ClaimCode)
+                return new ErrorModel(HttpStatusCode.BadRequest, "Invalid claim code");
 
-            await _claimCodeRepo.AddAsync(claimCode);
-            await _claimCodeRepo.SaveChangesAsync();
+            // Check if order is already fulfilled
+            if (order.Status == "Fulfilled")
+                return new ErrorModel(HttpStatusCode.BadRequest, "Order is already fulfilled");
 
-            return new ClaimCodeDto
-            {
-                ClaimCodeId = claimCode.ClaimCodeId,
-                Code = claimCode.Code,
-                OrderId = claimCode.OrderId,
-                IsUsed = claimCode.IsUsed,
-                CreatedAt = claimCode.CreatedAt
-            };
-        }
-
-        public async Task<GenericResponse<ClaimCodeDto>> ProcessClaimCodeAsync(ProcessClaimCodeDto dto, Guid staffId)
-        {
-            var claimCode = await _claimCodeRepo.Table
-                .FirstOrDefaultAsync(c => c.Code == dto.Code);
-
-            if (claimCode == null)
-                return new ErrorModel(HttpStatusCode.NotFound, "Claim code not found");
-
-            if (claimCode.IsUsed)
-                return new ErrorModel(HttpStatusCode.BadRequest, "Claim code already used");
-
-            var order = await _orderRepo.GetByIdAsync(claimCode.OrderId);
-            if (order == null)
-                return new ErrorModel(HttpStatusCode.NotFound, "Order not found");
-
-            // Update order status to fulfilled
+            // Update order status
             order.Status = "Fulfilled";
             _orderRepo.Update(order);
+            await _orderRepo.SaveChangesAsync();
 
-            // Mark claim code as used
-            claimCode.IsUsed = true;
-            claimCode.UsedAt = DateTime.UtcNow;
-            _claimCodeRepo.Update(claimCode);
-
-            await _claimCodeRepo.SaveChangesAsync();
-
-            return new ClaimCodeDto
-            {
-                ClaimCodeId = claimCode.ClaimCodeId,
-                Code = claimCode.Code,
-                OrderId = claimCode.OrderId,
-                IsUsed = claimCode.IsUsed,
-                CreatedAt = claimCode.CreatedAt,
-                UsedAt = claimCode.UsedAt
-            };
-        }
-
-        private string GenerateClaimCode()
-        {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            var bytes = new byte[8];
-            RandomNumberGenerator.Fill(bytes);
-            var result = new char[8];
-            for (int i = 0; i < 8; i++)
-            {
-                result[i] = chars[bytes[i] % chars.Length];
-            }
-            return new string(result);
+            return new GenericResponse<bool> { Data = true };
         }
     }
 }

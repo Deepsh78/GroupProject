@@ -127,6 +127,7 @@ builder.Services.AddScoped<IPublisherService, PublisherService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IBookAdminService, BookAdminService>();
 builder.Services.AddScoped<IBookMarkService, BookMarkService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
