@@ -30,16 +30,24 @@ namespace GroupApi.Services.Carts
                 .FirstOrDefaultAsync(c => c.MemberId == memberId);
 
             if (cart == null)
-                return new ErrorModel(HttpStatusCode.NotFound, "Book not found");
+                return new ErrorModel(HttpStatusCode.NotFound, "Cart not found");
 
             var result = cart.CartItems.Select(ci => new CartDto
             {
-            
                 CartId = ci.CartId,
-
+                MemberId = ci.Cart.MemberId,
+                CartItems = cart.CartItems.Select(c => new CartItemDto
+                {
+                    CartItemId = c.CartItemId,
+                    CartId = c.CartId,
+                    BookId = c.BookId,
+                    BookName = c.Book.BookName,
+                    Quantity = c.Quantity,
+                    Price = c.Book.Price
+                }).ToList()
             }).ToList();
 
-            return (result);
+            return result;
         }
 
         public async Task<GenericResponse<CartDto?>> GetByIdAsync()
@@ -51,7 +59,7 @@ namespace GroupApi.Services.Carts
                 .FirstOrDefaultAsync(c => c.MemberId == memberId);
 
             if (cart == null)
-                return new ErrorModel(HttpStatusCode.NotFound, "Book not found");
+                return new ErrorModel(HttpStatusCode.NotFound, "Cart not found");
 
             var cartDto = new CartDto
             {
@@ -68,16 +76,17 @@ namespace GroupApi.Services.Carts
                 }).ToList()
             };
 
-            return (cartDto);
+            return cartDto;
         }
 
-        public async Task<GenericResponse<CartDto>> AddAsync( Guid bookId, int quantity)
+        public async Task<GenericResponse<CartDto>> AddAsync(Guid bookId, int quantity)
         {
             var book = await _cartItemRepo.TableNoTracking
                 .FirstOrDefaultAsync(b => b.BookId == bookId);
 
             if (book == null)
                 return new ErrorModel(HttpStatusCode.NotFound, "Book not found");
+
             var memberId = _currentUserService.UserId;
             var cart = await _cartRepo.TableNoTracking
                 .FirstOrDefaultAsync(c => c.MemberId == memberId);
@@ -129,14 +138,14 @@ namespace GroupApi.Services.Carts
                 }).ToList()
             };
 
-            return (cartDto);
+            return cartDto;
         }
 
         public async Task<GenericResponse<CartDto>> UpdateAsync(Guid cartItemId, int quantity)
         {
             var cartItem = await _cartItemRepo.GetByIdAsync(cartItemId);
             if (cartItem == null)
-                return new ErrorModel(HttpStatusCode.NotFound, "Items not found");
+                return new ErrorModel(HttpStatusCode.NotFound, "Cart item not found");
 
             cartItem.Quantity = quantity;
             _cartItemRepo.Update(cartItem);
@@ -160,14 +169,14 @@ namespace GroupApi.Services.Carts
                 }
             };
 
-            return (cartDto);
+            return cartDto;
         }
 
         public async Task<GenericResponse<CartDto>> RemoveAsync(Guid cartItemId)
         {
             var cartItem = await _cartItemRepo.GetByIdAsync(cartItemId);
             if (cartItem == null)
-                return new ErrorModel(HttpStatusCode.NotFound, "Book not found");
+                return new ErrorModel(HttpStatusCode.NotFound, "Cart item not found");
 
             _cartItemRepo.Delete(cartItem);
             await _cartRepo.SaveChangesAsync();
@@ -179,7 +188,7 @@ namespace GroupApi.Services.Carts
                 CartItems = new List<CartItemDto>()
             };
 
-            return (cartDto);
+            return cartDto;
         }
     }
 }
