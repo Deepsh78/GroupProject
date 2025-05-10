@@ -4,7 +4,8 @@
     {
         Admin = 1,
         User = 2,
-        Staff=3
-      
+        Staff=3,
+        Member = 4
+
     }
 }

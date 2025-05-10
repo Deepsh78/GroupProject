@@ -19,6 +19,7 @@ using System.Security.Claims;
 using GroupApi.Services.BookMarks;
 using GroupApi.Services.Carts;
 using Acb.Core.Domain;
+using GroupApi.Services.Orders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -128,6 +129,7 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IBookMarkService, BookMarkService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 var app = builder.Build();

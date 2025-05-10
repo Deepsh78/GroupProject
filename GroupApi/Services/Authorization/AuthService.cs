@@ -10,7 +10,7 @@ using GroupApi.Data;
 using GroupApi.DTOs.Auth;
 using GroupApi.Entities.Auth;
 using GroupApi.Services.Interface;
-using MimeKit.Encodings;
+using GroupApi.Entities;
 
 public class AuthService : IAuthService
 {
@@ -36,35 +36,28 @@ public class AuthService : IAuthService
 
     public async Task<bool> RegisterAsync(RegisterDto model)
     {
-        try
+        var existingUser = await _userManager.FindByEmailAsync(model.Email);
+        if (existingUser != null)
+            return false;
+
+        var tempUser = new TempUserRegistration
         {
-            var existingUser = await _userManager.FindByEmailAsync(model.Email);
-            if (existingUser != null)
-                return false;
+            Id = Guid.NewGuid(),
+            FirstName = model.FirstName,
+            LastName = model.LastName,
+            Email = model.Email,
+            PasswordHash = new PasswordHasher<ApplicationUser>().HashPassword(null, model.Password),
+            Gender = model.Gender,
+            OTP = GenerateOTP(),
+            OTPExpiration = DateTime.UtcNow.AddMinutes(10),
+            CreatedAt = DateTime.UtcNow
+        };
 
-            var tempUser = new TempUserRegistration
-            {
-                Id = Guid.NewGuid(),
-                FirstName = model.FirstName,
-                LastName = model.LastName,
-                Email = model.Email,
-                PasswordHash = new PasswordHasher<ApplicationUser>().HashPassword(null, model.Password),
-                Gender = model.Gender,
-                OTP = GenerateOTP(),
-                OTPExpiration = DateTime.UtcNow.AddMinutes(10),
-                CreatedAt = DateTime.UtcNow
-            };
+        await _context.TempUserRegistrations.AddAsync(tempUser);
+        await _context.SaveChangesAsync();
 
-            await _context.TempUserRegistrations.AddAsync(tempUser);
-            await _context.SaveChangesAsync();
-
-            await _emailService.SendOtpEmailAsync(model.Email, tempUser.OTP, "registration");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            throw;
-        }
+        await _emailService.SendOtpEmailAsync(model.Email, tempUser.OTP, "registration");
+        return true;
     }
 
     public async Task<bool> VerifyOtpAsync(VerifyOtpDto model)
@@ -77,6 +70,7 @@ public class AuthService : IAuthService
 
         var user = new ApplicationUser
         {
+            Id = Guid.NewGuid().ToString(), // Ensure a unique ID for ApplicationUser
             UserName = tempUser.Email,
             Email = tempUser.Email,
             FirstName = tempUser.FirstName,
@@ -94,9 +88,22 @@ public class AuthService : IAuthService
         user.PasswordHash = tempUser.PasswordHash;
         await _userManager.UpdateAsync(user);
 
-        // Clean up TempUserRegistration
+        // Create corresponding Member entity
+        var member = new Member
+        {
+            MemberId = Guid.Parse(user.Id), // Use the same ID as ApplicationUser
+            UserName = user.UserName,
+            Email = user.Email,
+            Password = user.PasswordHash, // Store the hashed password
+            OrderCount = 0 // Initialize OrderCount
+        };
+
+        await _context.Members.AddAsync(member);
+
+        // Clean up TempUserRegistration and save all changes
         _context.TempUserRegistrations.Remove(tempUser);
         await _context.SaveChangesAsync();
+
         return true;
     }
 
