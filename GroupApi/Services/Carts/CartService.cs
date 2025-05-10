@@ -1,6 +1,7 @@
 ﻿using GroupApi.CommonDomain;
 using GroupApi.DTOs.Carts;
 using GroupApi.Entities;
+using GroupApi.Entities.Books;
 using GroupApi.GenericClasses;
 using GroupApi.Services.CurrentUser;
 using Microsoft.EntityFrameworkCore;
@@ -13,12 +14,14 @@ namespace GroupApi.Services.Carts
         private readonly IGenericRepository<Cart> _cartRepo;
         private readonly IGenericRepository<CartItem> _cartItemRepo;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IGenericRepository<Book> _bookRepo;
 
-        public CartService(IGenericRepository<Cart> cartRepo, IGenericRepository<CartItem> cartItemRepo, ICurrentUserService currentUserService)
+        public CartService(IGenericRepository<Cart> cartRepo, IGenericRepository<CartItem> cartItemRepo, ICurrentUserService currentUserService, IGenericRepository<Book> bookRepo)
         {
             _cartRepo = cartRepo;
             _cartItemRepo = cartItemRepo;
             _currentUserService = currentUserService;
+            _bookRepo = bookRepo;
         }
 
         public async Task<GenericResponse<IEnumerable<CartDto>>> GetAllAsync()
@@ -81,65 +84,77 @@ namespace GroupApi.Services.Carts
 
         public async Task<GenericResponse<CartDto>> AddAsync(Guid bookId, int quantity)
         {
-            var book = await _cartItemRepo.TableNoTracking
-                .FirstOrDefaultAsync(b => b.BookId == bookId);
-
-            if (book == null)
-                return new ErrorModel(HttpStatusCode.NotFound, "Book not found");
-
-            var memberId = _currentUserService.UserId;
-            var cart = await _cartRepo.TableNoTracking
-                .FirstOrDefaultAsync(c => c.MemberId == memberId);
-
-            if (cart == null)
+            try
             {
-                cart = new Cart
+                var book = await _bookRepo.TableNoTracking
+                    .FirstOrDefaultAsync(b => b.BookId == bookId);
+
+                if (book == null)
+                    return new ErrorModel(HttpStatusCode.NotFound, "Book not found");
+
+                var memberId = _currentUserService.UserId;
+                var cart = await _cartRepo.TableNoTracking
+                    .FirstOrDefaultAsync(c => c.MemberId == memberId);
+
+                if (cart == null)
                 {
-                    CartId = Guid.NewGuid(),
-                    MemberId = memberId
-                };
-                await _cartRepo.AddAsync(cart);
-            }
+                    cart = new Cart
+                    {
+                        CartId = Guid.NewGuid(),
+                        MemberId = memberId
+                    };
+                    await _cartRepo.AddAsync(cart);
+                }
 
-            var existingCartItem = await _cartItemRepo.TableNoTracking
-                .FirstOrDefaultAsync(ci => ci.CartId == cart.CartId && ci.BookId == bookId);
+                var existingCartItem = await _cartItemRepo.TableNoTracking
+                    .FirstOrDefaultAsync(ci => ci.CartId == cart.CartId && ci.BookId == bookId);
 
-            if (existingCartItem != null)
-            {
-                existingCartItem.Quantity += quantity;
-                _cartItemRepo.Update(existingCartItem);
-            }
-            else
-            {
-                var cartItem = new CartItem
+                if (existingCartItem != null)
                 {
-                    CartItemId = Guid.NewGuid(),
+                    existingCartItem.Quantity += quantity; // Correctly add to the quantity
+                    _cartItemRepo.Update(existingCartItem);
+                }
+                else
+                {
+                    var cartItem = new CartItem
+                    {
+                        CartItemId = Guid.NewGuid(),
+                        CartId = cart.CartId,
+                        BookId = bookId,
+                        Quantity = quantity
+                    };
+                    await _cartItemRepo.AddAsync(cartItem);
+                }
+
+                await _cartRepo.SaveChangesAsync();
+
+                var cartDto = new CartDto
+                {
                     CartId = cart.CartId,
-                    BookId = bookId,
-                    Quantity = quantity
+                    MemberId = cart.MemberId,
+                    CartItems = await _cartItemRepo.TableNoTracking
+                        .Where(ci => ci.CartId == cart.CartId)
+                        .Include(ci => ci.Book)  // Eagerly load the related Book entity
+                        .Select(ci => new CartItemDto
+                        {
+                            CartItemId = ci.CartItemId,
+                            CartId = ci.CartId,
+                            BookId = ci.BookId,
+                            BookName = ci.Book.BookName,
+                            Quantity = ci.Quantity,
+                            Price = ci.Book.Price,
+                            TotalPrice = ci.Quantity * ci.Book.Price // Calculate total price (price * quantity)
+                        }).ToListAsync()
                 };
-                await _cartItemRepo.AddAsync(cartItem);
+
+                return cartDto;
             }
-
-            await _cartRepo.SaveChangesAsync();
-
-            var cartDto = new CartDto
+            catch (Exception ex)
             {
-                CartId = cart.CartId,
-                MemberId = cart.MemberId,
-                CartItems = cart.CartItems.Select(ci => new CartItemDto
-                {
-                    CartItemId = ci.CartItemId,
-                    CartId = ci.CartId,
-                    BookId = ci.BookId,
-                    BookName = ci.Book.BookName,
-                    Quantity = ci.Quantity,
-                    Price = ci.Book.Price
-                }).ToList()
-            };
-
-            return cartDto;
+                throw;
+            }
         }
+
 
         public async Task<GenericResponse<CartDto>> UpdateAsync(Guid cartItemId, int quantity)
         {
