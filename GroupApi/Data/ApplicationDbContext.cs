@@ -1,6 +1,7 @@
 ﻿using GroupApi.Entities;
 using GroupApi.Entities.Auth;
 using GroupApi.Entities.Books;
+using GroupApi.Entities.Discount;
 using GroupApi.Entities.Oders;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;

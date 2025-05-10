@@ -10,7 +10,6 @@ namespace GroupApi.Controllers.Admin
 {
     [ApiController]
     [Route("api/admin/books")]
-    [Authorize(Roles = "Admin")]
     public class BookAdminController : ControllerBase
     {
         private readonly IBookAdminService _bookAdminService;
