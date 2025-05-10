@@ -2,6 +2,7 @@
 using GroupApi.Entities.Auth;
 using GroupApi.Entities.Books;
 using GroupApi.Entities.Oders;
+using GroupApi.Entities.Orders;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -36,6 +37,7 @@ namespace GroupApi.Data
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Publisher> Publishers { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<ClaimCode> ClaimCodes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
