@@ -1,12 +1,15 @@
-﻿using GroupApi.CommonDomain;
+﻿using Acb.Core.Domain;
+using GroupApi.CommonDomain;
 using GroupApi.DTOs.Books;
 using GroupApi.Entities;
 using GroupApi.Entities.Books;
 using GroupApi.GenericClasses;
 using GroupApi.Pagination;
+using GroupApi.Services.CurrentUser;
 using GroupApi.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
+using static GroupApi.Services.Books.BookService;
 
 namespace GroupApi.Services.Books
 {
@@ -14,11 +17,15 @@ namespace GroupApi.Services.Books
     {
         private readonly IGenericRepository<Book> _bookRepo;
         private readonly IGenericRepository<Publisher> _publisherRepo;
+        private readonly ICurrentUserService _currentUserService;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public BookService(IGenericRepository<Book> bookRepo, IGenericRepository<Publisher> publisherRepo)
+        public BookService(IGenericRepository<Book> bookRepo, IUnitOfWork unitOfWork,IGenericRepository<Publisher> publisherRepo, ICurrentUserService currentUserService)
         {
             _bookRepo = bookRepo;
             _publisherRepo = publisherRepo;
+            _currentUserService = currentUserService;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<GenericResponse<IEnumerable<BookReadDto>>> GetAllAsync()
@@ -231,6 +238,9 @@ namespace GroupApi.Services.Books
         }
 
 
+    
     }
-   
-    }
+
+}
+
+
