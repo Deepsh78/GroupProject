@@ -1,5 +1,4 @@
-﻿// GroupApi.Data/ApplicaionDbContext.cs
-using GroupApi.Entities;
+﻿using GroupApi.Entities;
 using GroupApi.Entities.Auth;
 using GroupApi.Entities.Books;
 using GroupApi.Entities.Oders;
@@ -8,13 +7,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GroupApi.Data
 {
-    public class ApplicaionDbContext : IdentityDbContext<ApplicationUser>
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        public ApplicaionDbContext(DbContextOptions<ApplicaionDbContext> options) : base(options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
 
-        // DbSet properties for all entities
+        // DbSet properties for authentication entities
+        public DbSet<TempUserRegistration> TempUserRegistrations { get; set; }
+        public DbSet<TempPasswordReset> TempPasswordResets { get; set; }
+
+        // DbSet properties for all other entities
         public DbSet<Author> Authors { get; set; }
         public DbSet<Book> Books { get; set; }
         public DbSet<BookAuthor> BookAuthors { get; set; }
@@ -33,8 +36,6 @@ namespace GroupApi.Data
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Publisher> Publishers { get; set; }
         public DbSet<Review> Reviews { get; set; }
-        public DbSet<OtpRecord> OtpRecords { get; set; }
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -55,11 +56,6 @@ namespace GroupApi.Data
             // Define composite key for BookGenre
             modelBuilder.Entity<BookGenre>()
                 .HasKey(bg => new { bg.BookId, bg.GenreId });
-        }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            base.OnConfiguring(optionsBuilder);
         }
     }
 }

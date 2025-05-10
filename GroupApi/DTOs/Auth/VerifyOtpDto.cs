@@ -1,9 +1,12 @@
-﻿// GroupApi.DTOs.Auth/VerifyOtpDto.cs
+﻿using System.ComponentModel.DataAnnotations;
+
 namespace GroupApi.DTOs.Auth
 {
     public class VerifyOtpDto
     {
+        [Required, EmailAddress]
         public string Email { get; set; }
-        public string Otp { get; set; }
+        [Required]
+        public string OTP { get; set; }
     }
 }

@@ -17,5 +17,6 @@ namespace GroupApi.Entities
         public decimal Percentage { get; set; }
         public bool OnSale { get; set; }
         public DateTime EndDate { get; set; }
+        public DateTime? StartDate { get; set; }
     }
 }

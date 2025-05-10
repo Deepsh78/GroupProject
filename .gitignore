@@ -402,3 +402,4 @@ FodyWeavers.xsd
 *.sln.iml
 /GroupApi/appsettings.json
 /GroupApi/appsettings.json
+/GroupApi/appsettings.Development.json

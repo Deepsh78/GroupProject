@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace GroupApi.Migrations
 {
-    [DbContext(typeof(ApplicaionDbContext))]
+    [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicaionDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
@@ -21,6 +21,149 @@ namespace GroupApi.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("GroupApi.Entities.Auth.ApplicationUser", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Gender")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
+
+                    b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("GroupApi.Entities.Auth.TempPasswordReset", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OTP")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("OTPExpiration")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TempPasswordResets", (string)null);
+                });
+
+            modelBuilder.Entity("GroupApi.Entities.Auth.TempUserRegistration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Gender")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OTP")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("OTPExpiration")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TempUserRegistrations", (string)null);
+                });
 
             modelBuilder.Entity("GroupApi.Entities.Author", b =>
                 {
@@ -34,10 +177,10 @@ namespace GroupApi.Migrations
 
                     b.HasKey("AuthorId");
 
-                    b.ToTable("Author");
+                    b.ToTable("Author", (string)null);
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.Book", b =>
+            modelBuilder.Entity("GroupApi.Entities.Books.Book", b =>
                 {
                     b.Property<Guid>("BookId")
                         .ValueGeneratedOnAdd()
@@ -47,6 +190,9 @@ namespace GroupApi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
@@ -55,6 +201,9 @@ namespace GroupApi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsComingSoon")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Language")
                         .IsRequired()
                         .HasColumnType("text");
@@ -62,101 +211,95 @@ namespace GroupApi.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric");
 
+                    b.Property<DateTime>("PublicationDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("PublisherId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("Stock")
+                        .HasColumnType("integer");
 
                     b.HasKey("BookId");
 
                     b.HasIndex("PublisherId");
 
-                    b.ToTable("Book");
+                    b.ToTable("Book", (string)null);
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.BookAuthor", b =>
+            modelBuilder.Entity("GroupApi.Entities.Books.BookAuthor", b =>
                 {
-                    b.Property<Guid>("BookAuthorId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("AuthorId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("BookId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("BookAuthorId");
+                    b.Property<Guid>("BookAuthorId")
+                        .HasColumnType("uuid");
 
-                    b.HasIndex("AuthorId");
+                    b.HasKey("AuthorId", "BookId");
 
                     b.HasIndex("BookId");
 
-                    b.ToTable("Book_Author");
+                    b.ToTable("Book_Author", (string)null);
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.BookCategory", b =>
+            modelBuilder.Entity("GroupApi.Entities.Books.BookCategory", b =>
                 {
-                    b.Property<Guid>("BookCtegoryId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BookId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("BookCtegoryId");
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BookCtegoryId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("CategoryId", "BookId");
 
                     b.HasIndex("BookId");
 
-                    b.HasIndex("CategoryId");
-
-                    b.ToTable("Book_Category");
+                    b.ToTable("Book_Category", (string)null);
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.BookFormat", b =>
+            modelBuilder.Entity("GroupApi.Entities.Books.BookFormat", b =>
                 {
-                    b.Property<Guid>("BookFormatId")
-                        .ValueGeneratedOnAdd()
+                    b.Property<Guid>("FormatId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("BookId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("FormatId")
+                    b.Property<Guid>("BookFormatId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("BookFormatId");
+                    b.HasKey("FormatId", "BookId");
 
                     b.HasIndex("BookId");
 
-                    b.HasIndex("FormatId");
-
-                    b.ToTable("Book_Format");
+                    b.ToTable("Book_Format", (string)null);
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.BookGenre", b =>
+            modelBuilder.Entity("GroupApi.Entities.Books.BookGenre", b =>
                 {
-                    b.Property<Guid>("BookGenreId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("BookId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("GenreId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("BookGenreId");
+                    b.Property<Guid>("BookGenreId")
+                        .HasColumnType("uuid");
 
-                    b.HasIndex("BookId");
+                    b.HasKey("BookId", "GenreId");
 
                     b.HasIndex("GenreId");
 
-                    b.ToTable("Book_Genre");
+                    b.ToTable("Book_Genre", (string)null);
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.BookMark", b =>
+            modelBuilder.Entity("GroupApi.Entities.Books.BookMark", b =>
                 {
                     b.Property<Guid>("BookMarkId")
                         .ValueGeneratedOnAdd()
@@ -174,7 +317,7 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("BookMark");
+                    b.ToTable("BookMark", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Cart", b =>
@@ -190,7 +333,7 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("Cart");
+                    b.ToTable("Cart", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.CartItem", b =>
@@ -214,7 +357,7 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("CartId");
 
-                    b.ToTable("Cart_Item");
+                    b.ToTable("Cart_Item", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Category", b =>
@@ -229,7 +372,7 @@ namespace GroupApi.Migrations
 
                     b.HasKey("CategoryId");
 
-                    b.ToTable("Category");
+                    b.ToTable("Category", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Discount", b =>
@@ -250,11 +393,14 @@ namespace GroupApi.Migrations
                     b.Property<decimal>("Percentage")
                         .HasColumnType("numeric");
 
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("DiscountId");
 
                     b.HasIndex("BookId");
 
-                    b.ToTable("Discount");
+                    b.ToTable("Discount", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Format", b =>
@@ -269,7 +415,7 @@ namespace GroupApi.Migrations
 
                     b.HasKey("FormatId");
 
-                    b.ToTable("Format");
+                    b.ToTable("Format", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Genre", b =>
@@ -284,7 +430,7 @@ namespace GroupApi.Migrations
 
                     b.HasKey("GenreId");
 
-                    b.ToTable("Genre");
+                    b.ToTable("Genre", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Member", b =>
@@ -310,10 +456,10 @@ namespace GroupApi.Migrations
 
                     b.HasKey("MemberId");
 
-                    b.ToTable("Member");
+                    b.ToTable("Member", (string)null);
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.Order", b =>
+            modelBuilder.Entity("GroupApi.Entities.Oders.Order", b =>
                 {
                     b.Property<Guid>("OrderId")
                         .ValueGeneratedOnAdd()
@@ -336,10 +482,10 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("Order");
+                    b.ToTable("Order", (string)null);
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.OrderItem", b =>
+            modelBuilder.Entity("GroupApi.Entities.Oders.OrderItem", b =>
                 {
                     b.Property<Guid>("OrderItemId")
                         .ValueGeneratedOnAdd()
@@ -360,7 +506,7 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("Order_Item");
+                    b.ToTable("Order_Item", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Publisher", b =>
@@ -383,7 +529,7 @@ namespace GroupApi.Migrations
 
                     b.HasKey("PublisherId");
 
-                    b.ToTable("Publisher");
+                    b.ToTable("Publisher", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Review", b =>
@@ -411,10 +557,142 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("Review");
+                    b.ToTable("Review", (string)null);
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.Book", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex");
+
+                    b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("GroupApi.Entities.Books.Book", b =>
                 {
                     b.HasOne("GroupApi.Entities.Publisher", "Publisher")
                         .WithMany("Book")
@@ -425,7 +703,7 @@ namespace GroupApi.Migrations
                     b.Navigation("Publisher");
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.BookAuthor", b =>
+            modelBuilder.Entity("GroupApi.Entities.Books.BookAuthor", b =>
                 {
                     b.HasOne("GroupApi.Entities.Author", "Author")
                         .WithMany()
@@ -433,8 +711,8 @@ namespace GroupApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GroupApi.Entities.Book", "Book")
-                        .WithMany()
+                    b.HasOne("GroupApi.Entities.Books.Book", "Book")
+                        .WithMany("BookAuthors")
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -444,10 +722,10 @@ namespace GroupApi.Migrations
                     b.Navigation("Book");
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.BookCategory", b =>
+            modelBuilder.Entity("GroupApi.Entities.Books.BookCategory", b =>
                 {
-                    b.HasOne("GroupApi.Entities.Book", "Book")
-                        .WithMany()
+                    b.HasOne("GroupApi.Entities.Books.Book", "Book")
+                        .WithMany("BookCategories")
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -463,10 +741,10 @@ namespace GroupApi.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.BookFormat", b =>
+            modelBuilder.Entity("GroupApi.Entities.Books.BookFormat", b =>
                 {
-                    b.HasOne("GroupApi.Entities.Book", "Book")
-                        .WithMany()
+                    b.HasOne("GroupApi.Entities.Books.Book", "Book")
+                        .WithMany("BookFormats")
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -482,10 +760,10 @@ namespace GroupApi.Migrations
                     b.Navigation("Format");
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.BookGenre", b =>
+            modelBuilder.Entity("GroupApi.Entities.Books.BookGenre", b =>
                 {
-                    b.HasOne("GroupApi.Entities.Book", "Book")
-                        .WithMany()
+                    b.HasOne("GroupApi.Entities.Books.Book", "Book")
+                        .WithMany("BookGenres")
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -501,9 +779,9 @@ namespace GroupApi.Migrations
                     b.Navigation("Genre");
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.BookMark", b =>
+            modelBuilder.Entity("GroupApi.Entities.Books.BookMark", b =>
                 {
-                    b.HasOne("GroupApi.Entities.Book", "Book")
+                    b.HasOne("GroupApi.Entities.Books.Book", "Book")
                         .WithMany()
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -533,7 +811,7 @@ namespace GroupApi.Migrations
 
             modelBuilder.Entity("GroupApi.Entities.CartItem", b =>
                 {
-                    b.HasOne("GroupApi.Entities.Book", "Book")
+                    b.HasOne("GroupApi.Entities.Books.Book", "Book")
                         .WithMany()
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -552,7 +830,7 @@ namespace GroupApi.Migrations
 
             modelBuilder.Entity("GroupApi.Entities.Discount", b =>
                 {
-                    b.HasOne("GroupApi.Entities.Book", "Book")
+                    b.HasOne("GroupApi.Entities.Books.Book", "Book")
                         .WithMany()
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -561,7 +839,7 @@ namespace GroupApi.Migrations
                     b.Navigation("Book");
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.Order", b =>
+            modelBuilder.Entity("GroupApi.Entities.Oders.Order", b =>
                 {
                     b.HasOne("GroupApi.Entities.Member", "Member")
                         .WithMany()
@@ -572,15 +850,15 @@ namespace GroupApi.Migrations
                     b.Navigation("Member");
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.OrderItem", b =>
+            modelBuilder.Entity("GroupApi.Entities.Oders.OrderItem", b =>
                 {
-                    b.HasOne("GroupApi.Entities.Book", "Book")
+                    b.HasOne("GroupApi.Entities.Books.Book", "Book")
                         .WithMany()
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GroupApi.Entities.Order", "Order")
+                    b.HasOne("GroupApi.Entities.Oders.Order", "Order")
                         .WithMany()
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -593,7 +871,7 @@ namespace GroupApi.Migrations
 
             modelBuilder.Entity("GroupApi.Entities.Review", b =>
                 {
-                    b.HasOne("GroupApi.Entities.Book", "Book")
+                    b.HasOne("GroupApi.Entities.Books.Book", "Book")
                         .WithMany()
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -608,6 +886,68 @@ namespace GroupApi.Migrations
                     b.Navigation("Book");
 
                     b.Navigation("Member");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.HasOne("GroupApi.Entities.Auth.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.HasOne("GroupApi.Entities.Auth.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GroupApi.Entities.Auth.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.HasOne("GroupApi.Entities.Auth.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GroupApi.Entities.Books.Book", b =>
+                {
+                    b.Navigation("BookAuthors");
+
+                    b.Navigation("BookCategories");
+
+                    b.Navigation("BookFormats");
+
+                    b.Navigation("BookGenres");
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Publisher", b =>

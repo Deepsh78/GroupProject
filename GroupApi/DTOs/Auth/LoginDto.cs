@@ -1,9 +1,12 @@
-﻿// GroupApi.DTOs.Auth/LoginUserDto.cs
+﻿using System.ComponentModel.DataAnnotations;
+
 namespace GroupApi.DTOs.Auth
 {
-    public class LoginUserDto
+    public class LoginDto
     {
+        [Required, EmailAddress]
         public string Email { get; set; }
+        [Required]
         public string Password { get; set; }
     }
 }
