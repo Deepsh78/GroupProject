@@ -5,7 +5,6 @@ namespace GroupApi.Services.Interface
 {
     public interface IOrderService
     {
-        Task<GenericResponse<ClaimCodeDto>> GenerateClaimCodeAsync(Guid orderId);
-        Task<GenericResponse<ClaimCodeDto>> ProcessClaimCodeAsync(ProcessClaimCodeDto dto, Guid staffId);
+        Task<GenericResponse<bool>> ProcessClaimCodeAsync(ProcessClaimCodeDto dto, string staffId);
     }
 }

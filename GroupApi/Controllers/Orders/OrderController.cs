@@ -4,11 +4,13 @@ using GroupApi.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace GroupApi.Controllers.Orders
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "Staff")]
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
@@ -18,21 +20,21 @@ namespace GroupApi.Controllers.Orders
             _orderService = orderService;
         }
 
-        [HttpPost("{orderId}/claim-code")]
-        [Authorize(Roles = "User")]
-        public async Task<ActionResult<GenericResponse<ClaimCodeDto>>> GenerateClaimCode(Guid orderId)
+        [HttpPost("process-claim")]
+        public async Task<ActionResult<GenericResponse<bool>>> ProcessClaimCode([FromBody] ProcessClaimCodeDto dto)
         {
-            var result = await _orderService.GenerateClaimCodeAsync(orderId);
-            return result.IsSuccess ? Ok(result) : StatusCode((int)result.Error!.StatusCode, result);
-        }
+            if (!ModelState.IsValid)
+                return BadRequest(new ErrorModel(System.Net.HttpStatusCode.BadRequest, "Invalid input data"));
 
-        [HttpPost("process-claim-code")]
-        [Authorize(Roles = "Staff")]
-        public async Task<ActionResult<GenericResponse<ClaimCodeDto>>> ProcessClaimCode([FromBody] ProcessClaimCodeDto dto)
-        {
-            var staffId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var staffId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(staffId))
+                return Unauthorized(new ErrorModel(System.Net.HttpStatusCode.Unauthorized, "Staff not authenticated"));
+
             var result = await _orderService.ProcessClaimCodeAsync(dto, staffId);
-            return result.IsSuccess ? Ok(result) : StatusCode((int)result.Error!.StatusCode, result);
+            if (!result.IsSuccess)
+                return StatusCode((int)result.Error!.StatusCode, result);
+
+            return Ok(result);
         }
     }
 }
