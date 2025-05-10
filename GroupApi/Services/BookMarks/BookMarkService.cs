@@ -48,29 +48,37 @@ namespace GroupApi.Services.BookMarks
 
         public async Task<GenericResponse<BookMarkDto>> AddBookmarkAsync(Guid bookId)
         {
-            var memberId = _currentUserService.UserId;  
-            var existingBookmark = await _bookMarkRepo.TableNoTracking
-                .FirstOrDefaultAsync(b => b.MemberId == memberId && b.BookId == bookId);
-
-            if (existingBookmark != null)
-                return new ErrorModel(HttpStatusCode.BadRequest, "This book is already bookmarked.");
-
-            var bookMark = new BookMark
+            try
             {
-                BookMarkId = Guid.NewGuid(),
-                BookId = bookId,
-                MemberId = memberId
-            };
+                var memberId = _currentUserService.UserId;
+                var existingBookmark = await _bookMarkRepo.TableNoTracking
+                    .FirstOrDefaultAsync(b => b.MemberId == memberId && b.BookId == bookId);
 
-            await _bookMarkRepo.AddAsync(bookMark);
-          
-            return new BookMarkDto
+                if (existingBookmark != null)
+                    return new ErrorModel(HttpStatusCode.BadRequest, "This book is already bookmarked.");
+
+                var bookMark = new BookMark
+                {
+                    BookMarkId = Guid.NewGuid(),
+                    BookId = bookId,
+                    MemberId = memberId
+                };
+
+                await _bookMarkRepo.AddAsync(bookMark);
+                await _bookMarkRepo.SaveChangesAsync();
+
+                return new BookMarkDto
+                {
+                    BookMarkId = bookMark.BookMarkId,
+                    BookId = bookMark.BookId,
+                    MemberId = bookMark.MemberId,
+
+                };
+            }
+            catch (Exception ex)
             {
-                BookMarkId = bookMark.BookMarkId,
-                BookId = bookMark.BookId,
-                MemberId = bookMark.MemberId,
-              
-            };
+                throw;
+            }
         }
 
        

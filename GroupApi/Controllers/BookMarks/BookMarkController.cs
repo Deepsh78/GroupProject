@@ -22,7 +22,7 @@ namespace GroupApi.Controllers.BookMarks
         public async Task<IActionResult> GetBookmarks()
         {
             var memberId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;  // Get current user ID from claims
-            var result = await _bookMarkService.GetBookmarksByMemberAsync(Guid.Parse(memberId));
+            var result = await _bookMarkService.GetBookmarksByMemberAsync();
 
             return result.IsSuccess ? Ok(result) : StatusCode((int)result.Error!.StatusCode, result);
 
