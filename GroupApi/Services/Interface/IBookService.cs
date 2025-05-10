@@ -14,6 +14,7 @@ namespace GroupApi.Services.Interface
         Task<Response> DeleteAsync(Guid id);
         Task<PaginatedList<BookReadDto>> GetFilteredBooksAsync(BookFilterDto filter);
         Task<BookDetailDto?> GetBookDetailAsync(Guid id);
+        Task AddBookmarkAsync(Guid memberId, Guid bookId);
     }
 
 
