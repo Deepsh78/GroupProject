@@ -19,7 +19,8 @@ namespace GroupApi.Entities.Oders
         // Foreign Key for Member
         public Guid MemberId { get; set; }
         public Member Member { get; set; }
+        public ICollection<OrderItem> OrderItems { get; set; }
 
-        
+
     }
 }
