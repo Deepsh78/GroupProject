@@ -14,13 +14,13 @@ namespace GroupApi.Services.BookMarks
     {
         private readonly IGenericRepository<BookMark> _bookMarkRepo;
         private readonly ICurrentUserService _currentUserService;
-        private readonly IUnitOfWork _unitOfWork;
+       
 
-        public BookMarkService(IGenericRepository<BookMark> bookMarkRepo, IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
+        public BookMarkService(IGenericRepository<BookMark> bookMarkRepo,  ICurrentUserService currentUserService)
         {
             _bookMarkRepo = bookMarkRepo;
             _currentUserService = currentUserService;
-            _unitOfWork = unitOfWork;
+        
         }
 
       
@@ -62,7 +62,7 @@ namespace GroupApi.Services.BookMarks
             };
 
             await _bookMarkRepo.AddAsync(bookMark);
-            _unitOfWork.Commit();
+          
             return new BookMarkDto
             {
                 BookMarkId = bookMark.BookMarkId,
@@ -84,7 +84,7 @@ namespace GroupApi.Services.BookMarks
                 return new ErrorModel(HttpStatusCode.NotFound, "Bookmark not found.");
 
             _bookMarkRepo.Delete(bookmark);
-             _unitOfWork.Commit();
+         
 
             return new BookMarkDto
             {

@@ -17,15 +17,12 @@ namespace GroupApi.Services.Books
     {
         private readonly IGenericRepository<Book> _bookRepo;
         private readonly IGenericRepository<Publisher> _publisherRepo;
-        private readonly ICurrentUserService _currentUserService;
-        private readonly IUnitOfWork _unitOfWork;
-
-        public BookService(IGenericRepository<Book> bookRepo, IUnitOfWork unitOfWork,IGenericRepository<Publisher> publisherRepo, ICurrentUserService currentUserService)
+       
+        public BookService(IGenericRepository<Book> bookRepo,IGenericRepository<Publisher> publisherRepo)
         {
             _bookRepo = bookRepo;
             _publisherRepo = publisherRepo;
-            _currentUserService = currentUserService;
-            _unitOfWork = unitOfWork;
+            
         }
 
         public async Task<GenericResponse<IEnumerable<BookReadDto>>> GetAllAsync()

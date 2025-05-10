@@ -12,5 +12,6 @@ namespace GroupApi.Entities
         // Foreign Key for Member
         public Guid MemberId { get; set; }
         public Member Member { get; set; }
+        public List<CartItem> CartItems { get; set; }
     }
 }

@@ -122,7 +122,7 @@ namespace GroupApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TempPasswordResets");
+                    b.ToTable("TempPasswordResets", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Auth.TempUserRegistration", b =>
@@ -162,7 +162,7 @@ namespace GroupApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TempUserRegistrations");
+                    b.ToTable("TempUserRegistrations", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Author", b =>
@@ -177,7 +177,7 @@ namespace GroupApi.Migrations
 
                     b.HasKey("AuthorId");
 
-                    b.ToTable("Author");
+                    b.ToTable("Author", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Books.Book", b =>
@@ -224,7 +224,7 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("PublisherId");
 
-                    b.ToTable("Book");
+                    b.ToTable("Book", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Books.BookAuthor", b =>
@@ -242,7 +242,7 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("BookId");
 
-                    b.ToTable("Book_Author");
+                    b.ToTable("Book_Author", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Books.BookCategory", b =>
@@ -260,7 +260,7 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("BookId");
 
-                    b.ToTable("Book_Category");
+                    b.ToTable("Book_Category", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Books.BookFormat", b =>
@@ -278,7 +278,7 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("BookId");
 
-                    b.ToTable("Book_Format");
+                    b.ToTable("Book_Format", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Books.BookGenre", b =>
@@ -296,7 +296,7 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("GenreId");
 
-                    b.ToTable("Book_Genre");
+                    b.ToTable("Book_Genre", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Books.BookMark", b =>
@@ -317,7 +317,7 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("BookMark");
+                    b.ToTable("BookMark", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Cart", b =>
@@ -333,7 +333,7 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("Cart");
+                    b.ToTable("Cart", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.CartItem", b =>
@@ -357,7 +357,7 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("CartId");
 
-                    b.ToTable("Cart_Item");
+                    b.ToTable("Cart_Item", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Category", b =>
@@ -372,7 +372,7 @@ namespace GroupApi.Migrations
 
                     b.HasKey("CategoryId");
 
-                    b.ToTable("Category");
+                    b.ToTable("Category", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Discount", b =>
@@ -400,7 +400,7 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("BookId");
 
-                    b.ToTable("Discount");
+                    b.ToTable("Discount", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Format", b =>
@@ -415,7 +415,7 @@ namespace GroupApi.Migrations
 
                     b.HasKey("FormatId");
 
-                    b.ToTable("Format");
+                    b.ToTable("Format", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Genre", b =>
@@ -430,7 +430,7 @@ namespace GroupApi.Migrations
 
                     b.HasKey("GenreId");
 
-                    b.ToTable("Genre");
+                    b.ToTable("Genre", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Member", b =>
@@ -456,7 +456,7 @@ namespace GroupApi.Migrations
 
                     b.HasKey("MemberId");
 
-                    b.ToTable("Member");
+                    b.ToTable("Member", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Oders.Order", b =>
@@ -482,7 +482,7 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("Order");
+                    b.ToTable("Order", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Oders.OrderItem", b =>
@@ -506,7 +506,7 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("Order_Item");
+                    b.ToTable("Order_Item", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Publisher", b =>
@@ -529,7 +529,7 @@ namespace GroupApi.Migrations
 
                     b.HasKey("PublisherId");
 
-                    b.ToTable("Publisher");
+                    b.ToTable("Publisher", (string)null);
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Review", b =>
@@ -557,7 +557,7 @@ namespace GroupApi.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("Review");
+                    b.ToTable("Review", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

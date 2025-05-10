@@ -16,6 +16,9 @@ using GroupApi.Configures;
 using AutoMapper;
 using Microsoft.AspNetCore.Diagnostics;
 using System.Security.Claims;
+using GroupApi.Services.BookMarks;
+using GroupApi.Services.Carts;
+using Acb.Core.Domain;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -115,6 +118,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // Add Services
+
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -122,6 +126,8 @@ builder.Services.AddScoped<IPublisherService, PublisherService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IBookMarkService, BookMarkService>();
+builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 var app = builder.Build();
