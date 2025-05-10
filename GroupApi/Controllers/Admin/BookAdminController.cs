@@ -1,6 +1,6 @@
 ﻿using GroupApi.CommonDomain;
 using GroupApi.DTOs.Books;
-using GroupApi.Services.Interface;
+using GroupApi.Services.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;

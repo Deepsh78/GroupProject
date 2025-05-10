@@ -5,7 +5,7 @@ using GroupApi.Entities;
 using GroupApi.Entities.Auth;
 using GroupApi.Entities.Books;
 using GroupApi.GenericClasses;
-using GroupApi.Services.Interface;
+using GroupApi.Services.Admin;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
