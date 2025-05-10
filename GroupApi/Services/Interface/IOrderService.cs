@@ -1,4 +1,4 @@
-﻿using GroupApi.CommonDomain;
+using GroupApi.CommonDomain;
 using GroupApi.DTOs.Orders;
 
 namespace GroupApi.Services.Interface

@@ -1,4 +1,4 @@
-﻿using GroupApi.CommonDomain;
+using GroupApi.CommonDomain;
 using GroupApi.DTOs.Orders;
 using GroupApi.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
@@ -16,6 +16,22 @@ namespace GroupApi.Controllers.Orders
         public OrderController(IOrderService orderService)
         {
             _orderService = orderService;
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "User")]
+        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto dto)
+        {
+            var result = await _orderService.CreateOrderAsync(dto);
+            return result.IsSuccess ? Ok(result.Data) : StatusCode((int)result.StatusCode, result.Message);
+        }
+
+        [HttpDelete("{orderId}")]
+        [Authorize(Roles = "User")]
+        public async Task<IActionResult> CancelOrder(Guid orderId)
+        {
+            var result = await _orderService.CancelOrderAsync(orderId);
+            return result.IsSuccess ? Ok(result.Data) : StatusCode((int)result.StatusCode, result.Message);
         }
 
         [HttpPost("{orderId}/claim-code")]

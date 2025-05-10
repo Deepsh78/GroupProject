@@ -1,4 +1,4 @@
-﻿using GroupApi.Services.Interface;
+using GroupApi.Services.Interface;
 using System.Net.Mail;
 
 namespace GroupApi.Services.Email
@@ -16,6 +16,13 @@ namespace GroupApi.Services.Email
         {
             string subject = purpose == "registration" ? "Verify Your Account" : "Password Reset OTP";
             string body = $"Your OTP for {purpose} is: {otp}. It will expire in 10 minutes.";
+            await SendEmailAsync(email, subject, body);
+        }
+
+        public async Task SendClaimCodeEmailAsync(string email, string claimCode)
+        {
+            string subject = "Your Order Claim Code";
+            string body = $"Thank you for your purchase!\n\nYour claim code is: {claimCode}\nPlease use this code to claim your order at our store.\n\nBest regards,\nBookstore Team";
             await SendEmailAsync(email, subject, body);
         }
 
