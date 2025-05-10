@@ -2,6 +2,7 @@
 using GroupApi.DTOs.Carts;
 using GroupApi.Entities;
 using GroupApi.GenericClasses;
+using GroupApi.Services.CurrentUser;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 
@@ -11,15 +12,18 @@ namespace GroupApi.Services.Carts
     {
         private readonly IGenericRepository<Cart> _cartRepo;
         private readonly IGenericRepository<CartItem> _cartItemRepo;
+        private readonly ICurrentUserService _currentUserService;
 
-        public CartService(IGenericRepository<Cart> cartRepo, IGenericRepository<CartItem> cartItemRepo)
+        public CartService(IGenericRepository<Cart> cartRepo, IGenericRepository<CartItem> cartItemRepo, ICurrentUserService currentUserService)
         {
             _cartRepo = cartRepo;
             _cartItemRepo = cartItemRepo;
+            _currentUserService = currentUserService;
         }
 
-        public async Task<GenericResponse<IEnumerable<CartDto>>> GetAllAsync(Guid memberId)
+        public async Task<GenericResponse<IEnumerable<CartDto>>> GetAllAsync()
         {
+            var memberId = _currentUserService.UserId;
             var cart = await _cartRepo.TableNoTracking
                 .Include(c => c.CartItems)
                 .ThenInclude(ci => ci.Book)
@@ -38,8 +42,9 @@ namespace GroupApi.Services.Carts
             return (result);
         }
 
-        public async Task<GenericResponse<CartDto?>> GetByIdAsync(Guid memberId)
+        public async Task<GenericResponse<CartDto?>> GetByIdAsync()
         {
+            var memberId = _currentUserService.UserId;
             var cart = await _cartRepo.TableNoTracking
                 .Include(c => c.CartItems)
                 .ThenInclude(ci => ci.Book)
@@ -66,14 +71,14 @@ namespace GroupApi.Services.Carts
             return (cartDto);
         }
 
-        public async Task<GenericResponse<CartDto>> AddAsync(Guid memberId, Guid bookId, int quantity)
+        public async Task<GenericResponse<CartDto>> AddAsync( Guid bookId, int quantity)
         {
             var book = await _cartItemRepo.TableNoTracking
                 .FirstOrDefaultAsync(b => b.BookId == bookId);
 
             if (book == null)
                 return new ErrorModel(HttpStatusCode.NotFound, "Book not found");
-
+            var memberId = _currentUserService.UserId;
             var cart = await _cartRepo.TableNoTracking
                 .FirstOrDefaultAsync(c => c.MemberId == memberId);
 

@@ -6,13 +6,13 @@ namespace GroupApi.Services.Carts
     public interface ICartService
     {
         // Get all items in the cart for a specific member
-        Task<GenericResponse<IEnumerable<CartDto>>> GetAllAsync(Guid memberId);
+        Task<GenericResponse<IEnumerable<CartDto>>> GetAllAsync();
 
         // Get a specific cart by member ID
-        Task<GenericResponse<CartDto?>> GetByIdAsync(Guid memberId);
+        Task<GenericResponse<CartDto?>> GetByIdAsync();
 
         // Add a book to the cart
-        Task<GenericResponse<CartDto>> AddAsync(Guid memberId, Guid bookId, int quantity);
+        Task<GenericResponse<CartDto>> AddAsync( Guid bookId, int quantity);
 
         // Update the quantity of a book in the cart
         Task<GenericResponse<CartDto>> UpdateAsync(Guid cartItemId, int quantity);

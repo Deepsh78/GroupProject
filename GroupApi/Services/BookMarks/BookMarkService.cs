@@ -24,8 +24,9 @@ namespace GroupApi.Services.BookMarks
         }
 
       
-        public async Task<GenericResponse<IEnumerable<BookMarkDto>>> GetBookmarksByMemberAsync(Guid memberId)
+        public async Task<GenericResponse<IEnumerable<BookMarkDto>>> GetBookmarksByMemberAsync()
         {
+            var memberId = _currentUserService.UserId;
             var bookmarks = await _bookMarkRepo.TableNoTracking
                 .Where(b => b.MemberId == memberId)
                 .Include(b => b.Book)
