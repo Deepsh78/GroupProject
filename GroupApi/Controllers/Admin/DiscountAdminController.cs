@@ -10,7 +10,6 @@ namespace GroupApi.Controllers.Admin
 {
     [ApiController]
     [Route("api/admin/discounts")]
-    //[Authorize(Roles = "Admin")]
     public class DiscountAdminController : ControllerBase
     {
         private readonly IDiscountService _discountService;
@@ -54,11 +53,7 @@ namespace GroupApi.Controllers.Admin
             if (!ModelState.IsValid)
                 return BadRequest(new ErrorModel(HttpStatusCode.BadRequest, "Invalid input data"));
 
-            var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(adminId))
-                return Unauthorized(new ErrorModel(HttpStatusCode.Unauthorized, "Admin not authenticated"));
-
-            var result = await _discountService.CreateAsync(dto, adminId);
+            var result = await _discountService.CreateAsync(dto);
             return result.IsSuccess
                 ? CreatedAtAction(nameof(GetById), new { id = result.Data!.DiscountId }, result)
                 : StatusCode((int)result.Error!.StatusCode, result);
@@ -70,22 +65,14 @@ namespace GroupApi.Controllers.Admin
             if (!ModelState.IsValid)
                 return BadRequest(new ErrorModel(HttpStatusCode.BadRequest, "Invalid input data"));
 
-            var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(adminId))
-                return Unauthorized(new ErrorModel(HttpStatusCode.Unauthorized, "Admin not authenticated"));
-
-            var result = await _discountService.UpdateAsync(id, dto, adminId);
+            var result = await _discountService.UpdateAsync(id, dto);
             return result.IsSuccess ? Ok(result) : StatusCode((int)result.Error!.StatusCode, result);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(adminId))
-                return Unauthorized(new ErrorModel(HttpStatusCode.Unauthorized, "Admin not authenticated"));
-
-            var result = await _discountService.DeleteAsync(id, adminId);
+            var result = await _discountService.DeleteAsync(id);
             return result.IsSuccess ? NoContent() : StatusCode((int)result.Error!.StatusCode, result);
         }
     }

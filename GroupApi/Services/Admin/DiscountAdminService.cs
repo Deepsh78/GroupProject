@@ -18,16 +18,13 @@ namespace GroupApi.Services.Admin
     {
         private readonly IGenericRepository<Discount> _discountRepo;
         private readonly IGenericRepository<Book> _bookRepo;
-        private readonly UserManager<ApplicationUser> _userManager;
 
         public DiscountAdminService(
             IGenericRepository<Discount> discountRepo,
-            IGenericRepository<Book> bookRepo,
-            UserManager<ApplicationUser> userManager)
+            IGenericRepository<Book> bookRepo)
         {
             _discountRepo = discountRepo;
             _bookRepo = bookRepo;
-            _userManager = userManager;
         }
 
         public async Task<GenericResponse<IEnumerable<DiscountReadDto>>> GetAllAsync()
@@ -71,12 +68,8 @@ namespace GroupApi.Services.Admin
             };
         }
 
-        public async Task<GenericResponse<DiscountReadDto>> CreateAsync(DiscountCreateDto dto, string adminId)
+        public async Task<GenericResponse<DiscountReadDto>> CreateAsync(DiscountCreateDto dto)
         {
-            var admin = await _userManager.FindByIdAsync(adminId);
-            if (admin == null || admin.Role != RoleType.Admin)
-                return new ErrorModel(HttpStatusCode.Forbidden, "Only admins can create discounts");
-
             var book = await _bookRepo.GetByIdAsync(dto.BookId);
             if (book == null)
                 return new ErrorModel(HttpStatusCode.BadRequest, "Invalid book ID");
@@ -110,12 +103,8 @@ namespace GroupApi.Services.Admin
             };
         }
 
-        public async Task<GenericResponse<DiscountReadDto?>> UpdateAsync(Guid id, DiscountUpdateDto dto, string adminId)
+        public async Task<GenericResponse<DiscountReadDto?>> UpdateAsync(Guid id, DiscountUpdateDto dto)
         {
-            var admin = await _userManager.FindByIdAsync(adminId);
-            if (admin == null || admin.Role != RoleType.Admin)
-                return new ErrorModel(HttpStatusCode.Forbidden, "Only admins can update discounts");
-
             var discount = await _discountRepo.GetByIdAsync(id);
             if (discount == null)
                 return new ErrorModel(HttpStatusCode.NotFound, "Discount not found");
@@ -146,12 +135,8 @@ namespace GroupApi.Services.Admin
             };
         }
 
-        public async Task<Response> DeleteAsync(Guid id, string adminId)
+        public async Task<Response> DeleteAsync(Guid id)
         {
-            var admin = await _userManager.FindByIdAsync(adminId);
-            if (admin == null || admin.Role != RoleType.Admin)
-                return new ErrorModel(HttpStatusCode.Forbidden, "Only admins can delete discounts");
-
             var discount = await _discountRepo.GetByIdAsync(id);
             if (discount == null)
                 return new ErrorModel(HttpStatusCode.NotFound, "Discount not found");

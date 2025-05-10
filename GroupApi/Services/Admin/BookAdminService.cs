@@ -15,16 +15,13 @@ namespace GroupApi.Services.Books
     public class BookAdminService : IBookAdminService
     {
         private readonly IGenericRepository<Book> _bookRepo;
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IGenericRepository<Publisher> _publisherRepo;
 
         public BookAdminService(
             IGenericRepository<Book> bookRepo,
-            UserManager<ApplicationUser> userManager,
             IGenericRepository<Publisher> publisherRepo)
         {
             _bookRepo = bookRepo;
-            _userManager = userManager;
             _publisherRepo = publisherRepo;
         }
 
@@ -79,12 +76,8 @@ namespace GroupApi.Services.Books
             };
         }
 
-        public async Task<GenericResponse<BookReadDto>> CreateAsync(BookCreateDto dto, string adminId)
+        public async Task<GenericResponse<BookReadDto>> CreateAsync(BookCreateDto dto)
         {
-            var admin = await _userManager.FindByIdAsync(adminId);
-            if (admin == null || admin.Role != RoleType.Admin)
-                return new ErrorModel(HttpStatusCode.Forbidden, "Only admins can create books");
-
             var publisher = await _publisherRepo.GetByIdAsync(dto.PublisherId);
             if (publisher == null)
                 return new ErrorModel(HttpStatusCode.BadRequest, "Invalid publisher ID");
@@ -124,12 +117,8 @@ namespace GroupApi.Services.Books
             };
         }
 
-        public async Task<GenericResponse<BookReadDto?>> UpdateAsync(Guid id, BookUpdateDto dto, string adminId)
+        public async Task<GenericResponse<BookReadDto?>> UpdateAsync(Guid id, BookUpdateDto dto)
         {
-            var admin = await _userManager.FindByIdAsync(adminId);
-            if (admin == null || admin.Role != RoleType.Admin)
-                return new ErrorModel(HttpStatusCode.Forbidden, "Only admins can update books");
-
             var book = await _bookRepo.GetByIdAsync(id);
             if (book == null)
                 return new ErrorModel(HttpStatusCode.NotFound, "Book not found");
@@ -168,12 +157,8 @@ namespace GroupApi.Services.Books
             };
         }
 
-        public async Task<Response> DeleteAsync(Guid id, string adminId)
+        public async Task<Response> DeleteAsync(Guid id)
         {
-            var admin = await _userManager.FindByIdAsync(adminId);
-            if (admin == null || admin.Role != RoleType.Admin)
-                return new ErrorModel(HttpStatusCode.Forbidden, "Only admins can delete books");
-
             var book = await _bookRepo.GetByIdAsync(id);
             if (book == null)
                 return new ErrorModel(HttpStatusCode.NotFound, "Book not found");
@@ -183,12 +168,8 @@ namespace GroupApi.Services.Books
             return new Response();
         }
 
-        public async Task<GenericResponse<BookReadDto>> UpdateStockAsync(Guid id, UpdateStockDto dto, string adminId)
+        public async Task<GenericResponse<BookReadDto>> UpdateStockAsync(Guid id, UpdateStockDto dto)
         {
-            var admin = await _userManager.FindByIdAsync(adminId);
-            if (admin == null || admin.Role != RoleType.Admin)
-                return new ErrorModel(HttpStatusCode.Forbidden, "Only admins can update stock");
-
             var book = await _bookRepo.GetByIdAsync(id);
             if (book == null)
                 return new ErrorModel(HttpStatusCode.NotFound, "Book not found");

@@ -25,11 +25,7 @@ namespace GroupApi.Controllers.Admin
             if (!ModelState.IsValid)
                 return BadRequest(new ErrorModel(HttpStatusCode.BadRequest, "Invalid input data"));
 
-            var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(adminId))
-                return Unauthorized(new ErrorModel(HttpStatusCode.Unauthorized, "Admin not authenticated"));
-
-            var result = await _bookAdminService.CreateAsync(dto, adminId);
+            var result = await _bookAdminService.CreateAsync(dto);
             return result.IsSuccess
                 ? CreatedAtAction(nameof(GetById), new { id = result.Data!.BookId }, result)
                 : StatusCode((int)result.Error!.StatusCode, result);
@@ -55,22 +51,14 @@ namespace GroupApi.Controllers.Admin
             if (!ModelState.IsValid)
                 return BadRequest(new ErrorModel(HttpStatusCode.BadRequest, "Invalid input data"));
 
-            var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(adminId))
-                return Unauthorized(new ErrorModel(HttpStatusCode.Unauthorized, "Admin not authenticated"));
-
-            var result = await _bookAdminService.UpdateAsync(id, dto, adminId);
+            var result = await _bookAdminService.UpdateAsync(id, dto);
             return result.IsSuccess ? Ok(result) : StatusCode((int)result.Error!.StatusCode, result);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(adminId))
-                return Unauthorized(new ErrorModel(HttpStatusCode.Unauthorized, "Admin not authenticated"));
-
-            var result = await _bookAdminService.DeleteAsync(id, adminId);
+            var result = await _bookAdminService.DeleteAsync(id);
             return result.IsSuccess ? NoContent() : StatusCode((int)result.Error!.StatusCode, result);
         }
 
@@ -80,11 +68,7 @@ namespace GroupApi.Controllers.Admin
             if (!ModelState.IsValid)
                 return BadRequest(new ErrorModel(HttpStatusCode.BadRequest, "Invalid input data"));
 
-            var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(adminId))
-                return Unauthorized(new ErrorModel(HttpStatusCode.Unauthorized, "Admin not authenticated"));
-
-            var result = await _bookAdminService.UpdateStockAsync(id, dto, adminId);
+            var result = await _bookAdminService.UpdateStockAsync(id, dto);
             return result.IsSuccess ? Ok(result) : StatusCode((int)result.Error!.StatusCode, result);
         }
     }
