@@ -36,76 +36,62 @@ namespace GroupApi.Services.MemberOrder
 
         public async Task<GenericResponse<OrderDto>> PlaceOrderAsync(List<CartItemDto> cartItems)
         {
-            try
+            var memberId = _currentUserService.UserId;
+            var discountResult = await _discountService.GetDiscountAsync( cartItems);
+            if (!discountResult.IsSuccess)
+                return new ErrorModel(HttpStatusCode.BadRequest, "Error calculating discount");
+
+            var totalAmount = discountResult.Data;
+
+            var order = new Order
             {
-                var memberId = _currentUserService.UserId;
-                var discountResult = await _discountService.GetDiscountAsync(cartItems);
-                if (!discountResult.IsSuccess)
-                    return new ErrorModel(HttpStatusCode.BadRequest, "Error calculating discount");
+                OrderId = Guid.NewGuid(),
+                MemberId = memberId,
+                OrderDate = DateTime.UtcNow,
+                Status = "Placed", // Initially, the status is "Placed"
+                TotalAmount = totalAmount,
+                ClaimCode = GenerateClaimCode() // Ensure claim code is generated here
+            };
 
-                var totalAmount = discountResult.Data;
+            await _orderRepo.AddAsync(order);
 
-                var order = new Order
-                {
-                    OrderId = Guid.NewGuid(),
-                    MemberId = memberId,
-                    OrderDate = DateTime.UtcNow,
-                    Status = "Placed",
-                    TotalAmount = totalAmount
-                };
-
-                await _orderRepo.AddAsync(order);
-
-                foreach (var cartItem in cartItems)
-                {
-                    var orderItem = new OrderItem
-                    {
-                        OrderItemId = Guid.NewGuid(),
-                        OrderId = order.OrderId,
-                        BookId = cartItem.BookId,
-                        Quantity = cartItem.Quantity,
-
-                    };
-                    await _orderItemRepo.AddAsync(orderItem);
-                }
-
-                await _orderRepo.SaveChangesAsync();
-
-                var claimCode = "CLAIM-" + Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
-
-                var claim = new ClaimCode
-                {
-                    ClaimCodeId = Guid.NewGuid(),
-                    Code = claimCode,
-                    OrderId = order.OrderId,
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                await _claimCodeRepo.AddAsync(claim);
-                await _orderRepo.SaveChangesAsync();
-
-                var orderDto = new OrderDto
-                {
-                    OrderId = order.OrderId,
-                    MemberId = order.MemberId,
-                    OrderDate = order.OrderDate,
-                    Status = order.Status,
-                    TotalAmount = order.TotalAmount,
-                    ClaimCode = claimCode,
-                    OrderItems = cartItems.Select(ci => new OrderItemDto
-                    {
-                        BookId = ci.BookId,
-                        Quantity = ci.Quantity,
-
-                    }).ToList()
-                };
-
-                return new GenericResponse<OrderDto> { Data = orderDto };
-            }
-            catch (Exception e)
+            foreach (var cartItem in cartItems)
             {
-                throw;
+                var orderItem = new OrderItem
+                {
+                    OrderItemId = Guid.NewGuid(),
+                    OrderId = order.OrderId,
+                    BookId = cartItem.BookId,
+                    Quantity = cartItem.Quantity,
+                   
+                };
+                await _orderItemRepo.AddAsync(orderItem);
             }
+
+            await _orderRepo.SaveChangesAsync();
+
+            var orderDto = new OrderDto
+            {
+                OrderId = order.OrderId,
+                MemberId = order.MemberId,
+                OrderDate = order.OrderDate,
+                Status = order.Status,
+                TotalAmount = order.TotalAmount,
+                ClaimCode = order.ClaimCode, // Ensure the claim code is included in the response
+                OrderItems = cartItems.Select(ci => new OrderItemDto
+                {
+                    BookId = ci.BookId,
+                    Quantity = ci.Quantity,
+                   
+                }).ToList()
+            };
+
+            return new GenericResponse<OrderDto> { Data = orderDto };
+        }
+
+        private string GenerateClaimCode()
+        {
+            return "CLAIM-" + Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
         }
 
         public async Task<GenericResponse<string>> CancelOrderAsync(Guid orderId)
