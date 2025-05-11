@@ -140,5 +140,15 @@ namespace GroupApi.Services.Discounts
 
             return orderDto;
         }
+
+        public Task<GenericResponse<decimal>> GetDiscountAsync(Guid memberId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<GenericResponse<decimal>> ApplyDiscountAsync(Guid memberId, List<CartItemDto> cartItems)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
