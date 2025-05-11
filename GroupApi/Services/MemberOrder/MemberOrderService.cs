@@ -1,4 +1,5 @@
-﻿using GroupApi.CommonDomain;
+﻿using Acb.Core.Extensions;
+using GroupApi.CommonDomain;
 using GroupApi.DTOs.Carts;
 using GroupApi.DTOs.MemberOrder;
 using GroupApi.DTOs.Orders;
@@ -37,57 +38,75 @@ namespace GroupApi.Services.MemberOrder
         public async Task<GenericResponse<OrderDto>> PlaceOrderAsync(List<CartItemDto> cartItems)
         {
             var memberId = _currentUserService.UserId;
-            var discountResult = await _discountService.GetDiscountAsync( cartItems);
+
+            // Apply discount
+            var discountResult = await _discountService.GetDiscountAsync(cartItems);
             if (!discountResult.IsSuccess)
                 return new ErrorModel(HttpStatusCode.BadRequest, "Error calculating discount");
 
             var totalAmount = discountResult.Data;
 
+            // Create the order
             var order = new Order
             {
                 OrderId = Guid.NewGuid(),
                 MemberId = memberId,
                 OrderDate = DateTime.UtcNow,
-                Status = "Placed", // Initially, the status is "Placed"
+                Status = "Placed",
                 TotalAmount = totalAmount,
-                ClaimCode = GenerateClaimCode() // Ensure claim code is generated here
+                ClaimCode = GenerateClaimCode() // Generate claim code
             };
 
             await _orderRepo.AddAsync(order);
 
+            // Add order items
             foreach (var cartItem in cartItems)
             {
+                // Load the book details to get BookName and Price
+                var book = await _bookRepo.TableNoTracking
+                    .FirstOrDefaultAsync(b => b.BookId == cartItem.BookId);
+
+                if (book == null)
+                    return new ErrorModel(HttpStatusCode.NotFound, $"Book with ID {cartItem.BookId} not found");
+
                 var orderItem = new OrderItem
                 {
                     OrderItemId = Guid.NewGuid(),
                     OrderId = order.OrderId,
                     BookId = cartItem.BookId,
                     Quantity = cartItem.Quantity,
-                   
+                    Price = book.Price // Ensure Price is set from Book entity
                 };
+
+                // Calculate TotalPrice for each OrderItem (Price * Quantity)
+                orderItem.TotalPrice = orderItem.Price * cartItem.Quantity;
+
                 await _orderItemRepo.AddAsync(orderItem);
             }
 
             await _orderRepo.SaveChangesAsync();
 
+            // Prepare OrderDto for the response
             var orderDto = new OrderDto
             {
                 OrderId = order.OrderId,
                 MemberId = order.MemberId,
                 OrderDate = order.OrderDate,
                 Status = order.Status,
-                TotalAmount = order.TotalAmount,
-                ClaimCode = order.ClaimCode, // Ensure the claim code is included in the response
+                ClaimCode = order.ClaimCode,
                 OrderItems = cartItems.Select(ci => new OrderItemDto
                 {
                     BookId = ci.BookId,
                     Quantity = ci.Quantity,
-                   
+               
+                    BookName = ci.BookName, // This will be automatically filled from the database during order item creation
+                    TotalPrice = (decimal)(ci.Price * ci.Quantity)  // Automatically calculate the TotalPrice here
                 }).ToList()
             };
 
             return new GenericResponse<OrderDto> { Data = orderDto };
         }
+
 
         private string GenerateClaimCode()
         {

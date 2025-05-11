@@ -44,7 +44,7 @@ namespace GroupApi.Services.Discounts
 
             if (successfulOrders >= 10)
             {
-                discount = Math.Max(discount, 0.10m); // Apply 10% if 10 successful orders
+                discount = Math.Max(discount, 0.10m); 
             }
 
             decimal totalAmount = (decimal)cartItems.Sum(ci => ci.Quantity * ci.Price);
