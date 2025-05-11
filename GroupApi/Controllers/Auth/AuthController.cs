@@ -2,7 +2,6 @@
 using System.Security.Claims;
 using GroupApi.DTOs.Auth;
 using GroupApi.Entities.Auth;
-using GroupApi.Services.CurrentUser;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

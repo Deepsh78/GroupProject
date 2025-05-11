@@ -1,7 +1,7 @@
 ﻿using GroupApi.CommonDomain;
 using GroupApi.DTOs.Books;
 
-namespace GroupApi.Services.Admin
+namespace GroupApi.Services.Interface
 {
     public interface IBookAdminService
     {
