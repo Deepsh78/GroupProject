@@ -22,6 +22,8 @@ using Acb.Core.Domain;
 using GroupApi.Services.Orders;
 using GroupApi.Services.Admin;
 using GroupApi.Services.Announcements;
+using GroupApi.Middleware;
+using GroupApi.Services.WebSocket;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -135,6 +137,7 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IDiscountService, DiscountAdminService>();
 builder.Services.AddScoped<IBannerAnnouncementService, BannerAnnouncementService>();
+builder.Services.AddScoped<WebSocketService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 var app = builder.Build();
@@ -175,6 +178,8 @@ else
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+app.UseWebSockets(); // Enable WebSocket support
+app.UseMiddleware<WebSocketMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

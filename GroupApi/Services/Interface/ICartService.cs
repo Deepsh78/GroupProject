@@ -1,7 +1,7 @@
 ﻿using GroupApi.CommonDomain;
 using GroupApi.DTOs.Carts;
 
-namespace GroupApi.Services.Carts
+namespace GroupApi.Services.Interface
 {
     public interface ICartService
     {
@@ -12,7 +12,7 @@ namespace GroupApi.Services.Carts
         Task<GenericResponse<CartDto?>> GetByIdAsync();
 
         // Add a book to the cart
-        Task<GenericResponse<CartDto>> AddAsync( Guid bookId, int quantity);
+        Task<GenericResponse<CartDto>> AddAsync(Guid bookId, int quantity);
 
         // Update the quantity of a book in the cart
         Task<GenericResponse<CartDto>> UpdateAsync(Guid cartItemId, int quantity);

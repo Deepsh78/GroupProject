@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using GroupApi.Services.Interface;
+using System.Security.Claims;
 
 namespace GroupApi.Services.CurrentUser
 {
