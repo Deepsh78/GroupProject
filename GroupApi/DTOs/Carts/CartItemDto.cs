@@ -9,7 +9,7 @@
         public int Quantity { get; set; } // Quantity of the book in the cart
         public decimal? Price { get; set; } // Book price
 
-        public decimal TotalPrice { get; set; }
+        public decimal? TotalPrice { get; set; }
     }
 
 }

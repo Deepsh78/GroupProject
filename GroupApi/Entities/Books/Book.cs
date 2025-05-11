@@ -9,7 +9,7 @@ namespace GroupApi.Entities.Books
     {
         [Key]
         public Guid BookId { get; set; } // Primary Key
-
+        public string? BookImage { get; set; } // Image URL
         public string BookName { get; set; }
         public string ISBN { get; set; }
         public decimal Price { get; set; }
