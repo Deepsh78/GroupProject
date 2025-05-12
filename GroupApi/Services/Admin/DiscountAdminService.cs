@@ -1,5 +1,4 @@
-﻿// GroupApi.Services.Discounts/DiscountService.cs
-using GroupApi.CommonDomain;
+﻿using GroupApi.CommonDomain;
 using GroupApi.DTOs.Discount;
 using GroupApi.Entities.Books;
 using GroupApi.Entities.Discount;
@@ -146,7 +145,7 @@ namespace GroupApi.Services.Admin
         {
             var discounts = await _discountRepo.TableNoTracking
                 .Include(d => d.Book)
-                .Where(d => d.IsActive)
+                .Where(d => DateTime.UtcNow >= d.StartDate && DateTime.UtcNow <= d.EndDate)
                 .ToListAsync();
 
             return discounts.Select(d => new DiscountReadDto
@@ -166,7 +165,7 @@ namespace GroupApi.Services.Admin
         {
             var discounts = await _discountRepo.TableNoTracking
                 .Include(d => d.Book)
-                .Where(d => d.IsActive && d.OnSale)
+                .Where(d => DateTime.UtcNow >= d.StartDate && DateTime.UtcNow <= d.EndDate && d.OnSale)
                 .ToListAsync();
 
             return discounts.Select(d => new DiscountReadDto
