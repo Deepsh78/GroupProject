@@ -3,6 +3,7 @@ using GroupApi.CommonDomain;
 using GroupApi.DTOs.Carts;
 using GroupApi.DTOs.MemberOrder;
 using GroupApi.DTOs.Orders;
+using GroupApi.Entities.Auth;
 using GroupApi.Entities.Books;
 using GroupApi.Entities.Oders;
 using GroupApi.Entities.Orders;
@@ -23,6 +24,7 @@ namespace GroupApi.Services.MemberOrder
         private readonly ICurrentUserService _currentUserService;
         private readonly IMemberDiscountService _discountService;
         private readonly IGenericRepository<ClaimCode> _claimCodeRepo;
+        private readonly IEmailService _emailService;
 
         public MemberOrderService(
             IGenericRepository<Order> orderRepo,
@@ -30,7 +32,8 @@ namespace GroupApi.Services.MemberOrder
             ICurrentUserService currentUserService,
             IMemberDiscountService discountService,
             IGenericRepository<ClaimCode> claimCodeRepo,
-            IGenericRepository<Book> bookRepo)
+            IGenericRepository<Book> bookRepo,
+            IEmailService emailService)
         {
             _orderRepo = orderRepo;
             _orderItemRepo = orderItemRepo;
@@ -38,6 +41,7 @@ namespace GroupApi.Services.MemberOrder
             _discountService = discountService;
             _claimCodeRepo = claimCodeRepo;
             _bookRepo = bookRepo;
+            _emailService = emailService;
         }
 
         public async Task<GenericResponse<OrderDto>> PlaceOrderAsync(List<CartItemDto> cartItems)
@@ -83,6 +87,17 @@ namespace GroupApi.Services.MemberOrder
                 }
 
                 await _orderRepo.SaveChangesAsync();
+                var member = _currentUserService.UserId;
+
+                if (member == Guid.Empty)
+                    return new ErrorModel(HttpStatusCode.NotFound, "Member not found");
+                var memberEmail = _currentUserService.UserEmail;
+                await _emailService.SendClaimCodeWithBillAsync(
+                   memberEmail,
+                   order.ClaimCode,
+                   order.TotalAmount,
+                   order.OrderId
+               );
 
                 var orderDto = new OrderDto
                 {

@@ -19,5 +19,13 @@ namespace GroupApi.Services.CurrentUser
                 return validGuid;
             }
         }
+        public string UserEmail
+        {
+            get
+            {
+                var emailClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email);
+                return emailClaim?.Value ?? string.Empty;
+            }
+        }
     }
 }

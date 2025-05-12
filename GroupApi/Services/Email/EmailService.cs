@@ -41,5 +41,26 @@ namespace GroupApi.Services.Email
 
             await smtpClient.SendMailAsync(mailMessage);
         }
+        public async Task SendClaimCodeWithBillAsync(string email, string claimCode, decimal totalAmount, Guid orderId)
+        {
+            string subject = "Your Bookstore Order & Claim Code";
+            string body = $@"
+        Dear Customer,
+
+        Thank you for your purchase!
+
+        Order ID: {orderId}
+        Total Amount: ${totalAmount}
+        Claim Code: {claimCode}
+
+        Please keep this code safe — you'll need it to claim your order.
+
+        Regards,
+        Bookstore Team
+    ";
+
+            await SendEmailAsync(email, subject, body);
+        }
+
     }
 }
