@@ -34,7 +34,7 @@ public class AuthService : IAuthService
         _context = context;
     }
 
-    public async Task<bool> RegisterAsync(RegisterDto model)
+    public async Task<bool> RegisterAsync(RegisterDto model)   
     {
         var existingUser = await _userManager.FindByEmailAsync(model.Email);
         if (existingUser != null)
