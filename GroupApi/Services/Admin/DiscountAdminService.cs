@@ -1,13 +1,13 @@
 ﻿using GroupApi.CommonDomain;
+<<<<<<< HEAD
 using GroupApi.Constants;
+=======
+>>>>>>> f6766c2b1f8eaf3ac611fe83c9b13a1cdd8eea17
 using GroupApi.DTOs.Discount;
-using GroupApi.Entities;
-using GroupApi.Entities.Auth;
 using GroupApi.Entities.Books;
 using GroupApi.Entities.Discount;
 using GroupApi.GenericClasses;
 using GroupApi.Services.Interface;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 

@@ -22,8 +22,13 @@ using Acb.Core.Domain;
 using GroupApi.Services.Orders;
 using GroupApi.Services.Admin;
 using GroupApi.Services.Announcements;
+<<<<<<< HEAD
 using GroupApi.Middleware;
 using GroupApi.Services.WebSocket;
+=======
+using GroupApi.Services.Discounts;
+using GroupApi.Services.MemberOrder;
+>>>>>>> f6766c2b1f8eaf3ac611fe83c9b13a1cdd8eea17
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -137,7 +142,12 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IDiscountService, DiscountAdminService>();
 builder.Services.AddScoped<IBannerAnnouncementService, BannerAnnouncementService>();
+<<<<<<< HEAD
 builder.Services.AddScoped<WebSocketService>();
+=======
+builder.Services.AddScoped<IMemberDiscountService, MemberDiscountService>();
+builder.Services.AddScoped<IMemberOrderService, MemberOrderService>();
+>>>>>>> f6766c2b1f8eaf3ac611fe83c9b13a1cdd8eea17
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 var app = builder.Build();
