@@ -24,6 +24,7 @@ using GroupApi.Services.Admin;
 using GroupApi.Services.Announcements;
 using GroupApi.Services.Discounts;
 using GroupApi.Services.MemberOrder;
+using GroupApi.Services.Files;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -139,6 +140,7 @@ builder.Services.AddScoped<IDiscountService, DiscountAdminService>();
 builder.Services.AddScoped<IBannerAnnouncementService, BannerAnnouncementService>();
 builder.Services.AddScoped<IMemberDiscountService, MemberDiscountService>();
 builder.Services.AddScoped<IMemberOrderService, MemberOrderService>();
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 var app = builder.Build();

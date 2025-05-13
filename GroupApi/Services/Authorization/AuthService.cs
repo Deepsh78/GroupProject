@@ -33,6 +33,45 @@ public class AuthService : IAuthService
         _jwtService = jwtService;
         _context = context;
     }
+    public async Task<bool> CreateAdminAsync(RegisterDto model)
+    {
+        // Check if email already exists
+        var existingUser = await _userManager.FindByEmailAsync(model.Email);
+        if (existingUser != null)
+            return false;
+
+        // Create new admin user
+        var user = new ApplicationUser
+        {
+            Id = Guid.NewGuid().ToString(),
+            UserName = model.Email,
+            Email = model.Email,
+            FirstName = model.FirstName,
+            LastName = model.LastName,
+            Gender = model.Gender,
+            Role = RoleType.Admin
+        };
+
+        // Create user with password
+        var result = await _userManager.CreateAsync(user, model.Password);
+        if (!result.Succeeded)
+            return false;
+
+        // Create corresponding Member entity
+        var member = new Member
+        {
+            MemberId = Guid.Parse(user.Id),
+            UserName = user.UserName,
+            Email = user.Email,
+            Password = user.PasswordHash,
+            OrderCount = 0
+        };
+
+        await _context.Members.AddAsync(member);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
 
     public async Task<bool> RegisterAsync(RegisterDto model)
     {
@@ -177,17 +216,25 @@ public class AuthService : IAuthService
         return result.Succeeded;
     }
 
-    public async Task<bool> AssignStaffRoleAsync(string userId, string adminId)
+    public async Task<bool> AssignStaffRoleAsync(string userId)
     {
-        var admin = await _userManager.FindByIdAsync(adminId);
-        if (admin == null || admin.Role != RoleType.Admin)
-            return false;
+       
 
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null)
             return false;
 
         user.Role = RoleType.Staff;
+        var result = await _userManager.UpdateAsync(user);
+        return result.Succeeded;
+    }
+    public async Task<bool> AssignAdminRoleAsync(string userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            return false;
+
+        user.Role = RoleType.Admin;
         var result = await _userManager.UpdateAsync(user);
         return result.Succeeded;
     }
@@ -244,6 +291,23 @@ public class AuthService : IAuthService
             await _emailService.SendOtpEmailAsync(model.Email, tempReset.OTP, "password reset");
             return true;
         }
+    }
+    public async Task<List<UserDto>> GetAllUsersAsync()
+    {
+        var users = await _userManager.Users
+            .Select(u => new UserDto
+            {
+                Id = u.Id,
+                Email = u.Email,
+                UserName = u.UserName,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Gender = u.Gender,
+                Role = u.Role
+            })
+            .ToListAsync();
+
+        return users;
     }
 
     private string GenerateOTP()
