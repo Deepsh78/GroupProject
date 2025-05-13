@@ -24,8 +24,6 @@ using GroupApi.Services.Admin;
 using GroupApi.Services.Announcements;
 using GroupApi.Services.Discounts;
 using GroupApi.Services.MemberOrder;
-using GroupApi.Services.Files;
-using GroupApi.Services.Reviews;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -439,35 +439,6 @@ namespace GroupApi.Migrations
                     b.ToTable("Discount");
                 });
 
-            modelBuilder.Entity("GroupApi.Entities.Files.FileMetadata", b =>
-                {
-                    b.Property<Guid>("FileId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("FilePath")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<long>("FileSize")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("FileId");
-
-                    b.ToTable("FileMetadata");
-                });
-
             modelBuilder.Entity("GroupApi.Entities.Format", b =>
                 {
                     b.Property<Guid>("FormatId")
