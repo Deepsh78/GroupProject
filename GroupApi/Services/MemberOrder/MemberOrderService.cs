@@ -163,5 +163,27 @@ namespace GroupApi.Services.MemberOrder
 
             return new GenericResponse<string> { Data = "Order has been successfully cancelled" };
         }
+        public async Task<GenericResponse<List<OrderDto>>> GetMyOrdersAsync()
+        {
+            var memberId = _currentUserService.UserId;
+
+            var orders = await _orderRepo.TableNoTracking
+                .Where(o => o.MemberId == memberId)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+
+            var orderDtos = orders.Select(order => new OrderDto
+            {
+                OrderId = order.OrderId,
+                MemberId = order.MemberId,
+                OrderDate = order.OrderDate,
+                Status = order.Status,
+                ClaimCode = order.ClaimCode,
+            }).ToList();
+
+            return new GenericResponse<List<OrderDto>> { Data = orderDtos };
+        }
+
+
     }
 }

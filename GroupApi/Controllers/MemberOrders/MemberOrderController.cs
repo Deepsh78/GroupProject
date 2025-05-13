@@ -29,5 +29,12 @@ namespace GroupApi.Controllers.MemberOrders
                 return Ok(result.Data);
             return StatusCode((int)result.Error!.StatusCode, result);
         }
+        [HttpGet("my-orders")]
+        public async Task<IActionResult> GetMyOrders()
+        {
+            var result = await _memberOrderService.GetMyOrdersAsync();
+            return Ok(result);
+        }
+
     }
 }
