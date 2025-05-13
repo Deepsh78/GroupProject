@@ -102,7 +102,8 @@ namespace GroupApi.Services.Reviews
                 Rating = dto.Rating,
                 Comment = dto.Comment
             };
-
+            if (review.Rating < 1 || review.Rating > 5)
+                return new ErrorModel(HttpStatusCode.BadRequest, "Rating must be between 1 and 5.");
             await _reviewRepo.AddAsync(review);
             await _reviewRepo.SaveChangesAsync();
 
@@ -144,7 +145,8 @@ namespace GroupApi.Services.Reviews
             review.BookId = dto.BookId;
             review.Rating = dto.Rating;
             review.Comment = dto.Comment;
-
+            if (review.Rating < 1 || review.Rating > 5)
+                return new ErrorModel(HttpStatusCode.BadRequest, "Rating must be between 1 and 5.");
             _reviewRepo.Update(review);
             await _reviewRepo.SaveChangesAsync();
 
