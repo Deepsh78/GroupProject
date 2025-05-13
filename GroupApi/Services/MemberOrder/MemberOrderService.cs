@@ -3,6 +3,7 @@ using GroupApi.CommonDomain;
 using GroupApi.DTOs.Carts;
 using GroupApi.DTOs.MemberOrder;
 using GroupApi.DTOs.Orders;
+using GroupApi.Entities;
 using GroupApi.Entities.Auth;
 using GroupApi.Entities.Books;
 using GroupApi.Entities.Oders;
@@ -25,6 +26,10 @@ namespace GroupApi.Services.MemberOrder
         private readonly IMemberDiscountService _discountService;
         private readonly IGenericRepository<ClaimCode> _claimCodeRepo;
         private readonly IEmailService _emailService;
+        private readonly IGenericRepository<CartItem> _cartItemRepo;
+        private readonly IGenericRepository<Cart> _cartRepo;
+        private readonly IGenericRepository<Member> _memberRepo;
+        private readonly IGenericRepository<Publisher> _publisherRepo;
 
         public MemberOrderService(
             IGenericRepository<Order> orderRepo,
@@ -33,7 +38,9 @@ namespace GroupApi.Services.MemberOrder
             IMemberDiscountService discountService,
             IGenericRepository<ClaimCode> claimCodeRepo,
             IGenericRepository<Book> bookRepo,
-            IEmailService emailService)
+            IEmailService emailService, IGenericRepository<CartItem> cartItemRepo,
+            IGenericRepository<Cart> cartRepo, IGenericRepository<Member> memberRepo
+            )
         {
             _orderRepo = orderRepo;
             _orderItemRepo = orderItemRepo;
@@ -42,6 +49,9 @@ namespace GroupApi.Services.MemberOrder
             _claimCodeRepo = claimCodeRepo;
             _bookRepo = bookRepo;
             _emailService = emailService;
+            _cartItemRepo = cartItemRepo;
+            _cartRepo = cartRepo;
+            _memberRepo = memberRepo;
         }
 
         public async Task<GenericResponse<OrderDto>> PlaceOrderAsync(List<CartItemDto> cartItems)
@@ -87,17 +97,26 @@ namespace GroupApi.Services.MemberOrder
                 }
 
                 await _orderRepo.SaveChangesAsync();
-                var member = _currentUserService.UserId;
 
-                if (member == Guid.Empty)
-                    return new ErrorModel(HttpStatusCode.NotFound, "Member not found");
                 var memberEmail = _currentUserService.UserEmail;
                 await _emailService.SendClaimCodeWithBillAsync(
                    memberEmail,
                    order.ClaimCode,
                    order.TotalAmount,
                    order.OrderId
-               );
+                );
+
+                // ✅ Delete Cart after placing the order
+                var cart = await _cartRepo.Table
+                    .Include(c => c.CartItems)
+                    .FirstOrDefaultAsync(c => c.MemberId == memberId);
+
+                if (cart != null)
+                {
+                    _cartItemRepo.DeleteRange(cart.CartItems);
+                    _cartRepo.Delete(cart);
+                    await _cartRepo.SaveChangesAsync();
+                }
 
                 var orderDto = new OrderDto
                 {
@@ -126,6 +145,7 @@ namespace GroupApi.Services.MemberOrder
                 throw;
             }
         }
+
 
         private string GenerateClaimCode()
         {
