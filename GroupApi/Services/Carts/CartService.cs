@@ -228,6 +228,7 @@ namespace GroupApi.Services.Carts
                 .Include(ci => ci.Book)
                 .Include(ci => ci.Cart)
                 .ThenInclude(c => c.CartItems)
+                .ThenInclude(ci => ci.Book)
                 .FirstOrDefaultAsync(ci => ci.CartItemId == cartItemId);
 
             if (cartItem == null)
@@ -246,19 +247,22 @@ namespace GroupApi.Services.Carts
                 await _cartItemRepo.SaveChangesAsync();
             }
 
-            // Refresh cart items after potential change
-            var updatedCartItems = cart.CartItems
-                .Where(ci => ci.CartItemId != cartItemId || cartItem.Quantity > 1) // keep only if not deleted
-                .Select(c => new CartItemDto
-                {
-                    CartItemId = c.CartItemId,
-                    CartId = c.CartId,
-                    BookId = c.BookId,
-                    BookName = c.Book.BookName,
-                    Quantity = c.Quantity,
-                    Price = c.Book.Price,
-                    TotalPrice = c.Quantity * c.Book.Price
-                }).ToList();
+            // Refresh the cart and its items with book info
+            cart = await _cartRepo.TableNoTracking
+                .Include(c => c.CartItems)
+                .ThenInclude(ci => ci.Book)
+                .FirstOrDefaultAsync(c => c.CartId == cart.CartId);
+
+            var updatedCartItems = cart.CartItems.Select(c => new CartItemDto
+            {
+                CartItemId = c.CartItemId,
+                CartId = c.CartId,
+                BookId = c.BookId,
+                BookName = c.Book?.BookName ?? "[Unknown]",
+                Quantity = c.Quantity,
+                Price = c.Book?.Price ?? 0,
+                TotalPrice = c.Quantity * (c.Book?.Price ?? 0)
+            }).ToList();
 
             var updatedCartDto = new CartDto
             {
