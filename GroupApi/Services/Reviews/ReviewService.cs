@@ -76,6 +76,18 @@ namespace GroupApi.Services.Reviews
             var userId = _currentUser.UserId;
             if (userId == Guid.Empty)
                 return new ErrorModel(HttpStatusCode.Unauthorized, "User not authenticated");
+
+            var hasPurchased = await _orderRepo.Table
+                .Where(o => o.MemberId == userId && o.Status == "Fulfilled")
+                .Join(_orderItemRepo.Table,
+                      o => o.OrderId,
+                      oi => oi.OrderId,
+                      (o, oi) => oi)
+                .AnyAsync(oi => oi.BookId == dto.BookId);
+
+            if (!hasPurchased)
+                return new ErrorModel(HttpStatusCode.Forbidden, "You can only review books you have purchased.");
+
             var existingReview = await _reviewRepo.TableNoTracking
                 .AnyAsync(r => r.BookId == dto.BookId && r.MemberId == userId);
 
@@ -90,8 +102,10 @@ namespace GroupApi.Services.Reviews
                 Rating = dto.Rating,
                 Comment = dto.Comment
             };
+
             if (review.Rating < 1 || review.Rating > 5)
                 return new ErrorModel(HttpStatusCode.BadRequest, "Rating must be between 1 and 5.");
+
             await _reviewRepo.AddAsync(review);
             await _reviewRepo.SaveChangesAsync();
 
@@ -104,6 +118,7 @@ namespace GroupApi.Services.Reviews
                 Comment = review.Comment
             };
         }
+
 
 
         public async Task<GenericResponse<ReviewDto?>> UpdateAsync(Guid id, UpdateReviewDto dto)
