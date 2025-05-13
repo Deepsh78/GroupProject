@@ -1,8 +1,8 @@
 ﻿using GroupApi.CommonDomain;
-<<<<<<< HEAD
+
 using GroupApi.Constants;
-=======
->>>>>>> f6766c2b1f8eaf3ac611fe83c9b13a1cdd8eea17
+
+
 using GroupApi.DTOs.Discount;
 using GroupApi.Entities.Books;
 using GroupApi.Entities.Discount;
