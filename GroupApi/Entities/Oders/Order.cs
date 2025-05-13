@@ -20,6 +20,8 @@ namespace GroupApi.Entities.Oders
         public Guid MemberId { get; set; }
         public Member Member { get; set; }
 
-        
+        public List<OrderItem> OrderItems { get; set; }
+
+
     }
 }

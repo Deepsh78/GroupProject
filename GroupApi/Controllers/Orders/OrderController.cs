@@ -10,7 +10,7 @@ namespace GroupApi.Controllers.Orders
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Staff")]
+   
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
@@ -30,7 +30,7 @@ namespace GroupApi.Controllers.Orders
             if (string.IsNullOrEmpty(staffId))
                 return Unauthorized(new ErrorModel(System.Net.HttpStatusCode.Unauthorized, "Staff not authenticated"));
 
-            var result = await _orderService.ProcessClaimCodeAsync(dto, staffId);
+            var result = await _orderService.ProcessClaimCodeAsync(dto);
             if (!result.IsSuccess)
                 return StatusCode((int)result.Error!.StatusCode, result);
 
