@@ -76,18 +76,6 @@ namespace GroupApi.Services.Reviews
             var userId = _currentUser.UserId;
             if (userId == Guid.Empty)
                 return new ErrorModel(HttpStatusCode.Unauthorized, "User not authenticated");
-
-            // Check if the user has purchased this book
-            //var hasPurchased = await _orderItemRepo.TableNoTracking
-            //    .Include(oi => oi.Order)
-            //    .AnyAsync(oi =>
-            //        oi.BookId == dto.BookId &&
-            //        oi.Order.MemberId == userId);
-
-            //if (!hasPurchased)
-            //    return new ErrorModel(HttpStatusCode.Forbidden, "You can only review books you have purchased.");
-
-            //// Optional: Prevent duplicate review
             var existingReview = await _reviewRepo.TableNoTracking
                 .AnyAsync(r => r.BookId == dto.BookId && r.MemberId == userId);
 
@@ -130,18 +118,6 @@ namespace GroupApi.Services.Reviews
 
             if (review.MemberId != userId)
                 return new ErrorModel(HttpStatusCode.Forbidden, "You can only update your own reviews.");
-
-            //// Optional: verify user has purchased the book
-            //var hasPurchased = await _orderItemRepo.TableNoTracking
-            //    .Include(oi => oi.Order)
-            //    .AnyAsync(oi =>
-            //        oi.BookId == dto.BookId &&
-            //        oi.Order.MemberId == userId);
-
-            //if (!hasPurchased)
-            //    return new ErrorModel(HttpStatusCode.Forbidden, "You cannot review a book you haven't purchased.");
-
-            // Update allowed
             review.BookId = dto.BookId;
             review.Rating = dto.Rating;
             review.Comment = dto.Comment;
