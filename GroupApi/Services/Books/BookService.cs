@@ -17,12 +17,13 @@ namespace GroupApi.Services.Books
     {
         private readonly IGenericRepository<Book> _bookRepo;
         private readonly IGenericRepository<Publisher> _publisherRepo;
+        private readonly IGenericRepository<Review> _reviewRepo;
        
-        public BookService(IGenericRepository<Book> bookRepo,IGenericRepository<Publisher> publisherRepo)
+        public BookService(IGenericRepository<Book> bookRepo,IGenericRepository<Publisher> publisherRepo, IGenericRepository<Review> reviewRepo)
         {
             _bookRepo = bookRepo;
             _publisherRepo = publisherRepo;
-            
+            _reviewRepo = reviewRepo;
         }
 
         public async Task<GenericResponse<IEnumerable<BookReadDto>>> GetAllAsync()
@@ -60,6 +61,16 @@ namespace GroupApi.Services.Books
             if (book == null)
                 return new ErrorModel(HttpStatusCode.NotFound, "Book not found");
 
+            var ratings = await _reviewRepo.TableNoTracking
+                .Where(r => r.BookId == id)
+                .Select(r => r.Rating)
+                .ToListAsync();
+            
+            double? averageRating = ratings.Any() ? ratings.Average() : null;
+            if (averageRating <= 0)
+            {
+                return new ErrorModel(HttpStatusCode.NotFound, "Rating not found");
+            }
             return new BookReadDto
             {
                 BookId = book.BookId,
@@ -74,9 +85,11 @@ namespace GroupApi.Services.Books
                 PublicationDate = book.PublicationDate,
                 CreatedAt = book.CreatedAt,
                 IsComingSoon = book.IsComingSoon,
-                BookImage = book.BookImage
+                BookImage = book.BookImage,
+                Rating = (int)averageRating
             };
         }
+
 
         public async Task<GenericResponse<BookReadDto>> CreateAsync(BookCreateDto dto)
         {

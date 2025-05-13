@@ -16,6 +16,7 @@
         public bool IsComingSoon { get; set; }
         public string? BookImage { get; set; }
 
+        public int Rating { get; set; }
 
     }
 
