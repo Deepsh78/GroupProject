@@ -44,7 +44,8 @@ namespace GroupApi.Services.Books
                 PublisherName = b.Publisher?.Name ?? "",
                 PublicationDate = b.PublicationDate,
                 CreatedAt = b.CreatedAt,
-                IsComingSoon = b.IsComingSoon
+                IsComingSoon = b.IsComingSoon,
+                BookImage = b.BookImage
             });
 
             return result.ToList();
@@ -72,7 +73,8 @@ namespace GroupApi.Services.Books
                 PublisherName = book.Publisher?.Name ?? "",
                 PublicationDate = book.PublicationDate,
                 CreatedAt = book.CreatedAt,
-                IsComingSoon = book.IsComingSoon
+                IsComingSoon = book.IsComingSoon,
+                BookImage = book.BookImage
             };
         }
 
@@ -92,7 +94,8 @@ namespace GroupApi.Services.Books
                     PublisherId = dto.PublisherId,
                     PublicationDate = dto.PublicationDate,
                     IsComingSoon = dto.IsComingSoon,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    BookImage = dto.BookImage
                 };
 
                 await _bookRepo.AddAsync(book);
@@ -111,7 +114,8 @@ namespace GroupApi.Services.Books
                     PublisherName = "", // You may fetch it if needed
                     PublicationDate = book.PublicationDate,
                     CreatedAt = book.CreatedAt,
-                    IsComingSoon = book.IsComingSoon
+                    IsComingSoon = book.IsComingSoon,
+                    BookImage = book.BookImage
                 };
             }
             catch (Exception ex)
@@ -185,7 +189,8 @@ namespace GroupApi.Services.Books
                 PublisherName = "", // optional
                 PublicationDate = book.PublicationDate,
                 CreatedAt = book.CreatedAt,
-                IsComingSoon = book.IsComingSoon
+                IsComingSoon = book.IsComingSoon,
+                BookImage = book.BookImage
             };
         }
 
