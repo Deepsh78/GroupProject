@@ -14,6 +14,7 @@
         public DateTime PublicationDate { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsComingSoon { get; set; }
+        public string? BookImage { get; set; }
     }
 
 }

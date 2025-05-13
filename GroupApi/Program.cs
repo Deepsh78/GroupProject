@@ -25,8 +25,17 @@ using GroupApi.Services.Announcements;
 using GroupApi.Services.Discounts;
 using GroupApi.Services.MemberOrder;
 using GroupApi.Services.Files;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add logging
+builder.Services.AddLogging(logging =>
+{
+    logging.AddConsole();
+    logging.AddDebug();
+    logging.SetMinimumLevel(LogLevel.Debug); // Capture more details
+});
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -92,8 +101,8 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
-        NameClaimType = "sub", // Maps 'sub' to ClaimTypes.NameIdentifier
-        RoleClaimType = ClaimTypes.Role // Maps 'role' to ClaimTypes.Role
+        NameClaimType = "sub",
+        RoleClaimType = ClaimTypes.Role
     };
     options.Events = new JwtBearerEvents
     {
@@ -116,7 +125,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", builder =>
     {
-        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders("Content-Disposition");
     });
 });
 
@@ -124,7 +133,6 @@ builder.Services.AddCors(options =>
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // Add Services
-
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -146,43 +154,72 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        var error = exceptionHandlerPathFeature?.Error;
+        logger.LogError(error, "Unhandled exception occurred at {Path} with method {Method}", context.Request.Path, context.Request.Method);
+        var errorResponse = new
+        {
+            message = "An unexpected error occurred.",
+            detail = app.Environment.IsDevelopment() ? error?.Message : null,
+            stackTrace = app.Environment.IsDevelopment() ? error?.StackTrace : null
+        };
+        await context.Response.WriteAsJsonAsync(errorResponse);
+    });
+});
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseExceptionHandler(errorApp =>
-    {
-        errorApp.Run(async context =>
-        {
-            context.Response.StatusCode = 500;
-            context.Response.ContentType = "application/json";
-            var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
-            var errorResponse = new
-            {
-                message = "An unexpected error occurred.",
-                detail = exceptionHandlerPathFeature?.Error?.Message
-            };
-            await context.Response.WriteAsJsonAsync(errorResponse);
-        });
-    });
-}
-else
-{
-    app.UseExceptionHandler(errorApp =>
-    {
-        errorApp.Run(async context =>
-        {
-            context.Response.StatusCode = 500;
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync("{\"message\": \"An unexpected error occurred.\"}");
-        });
-    });
 }
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-app.Run();
+// Validate upload directory at startup
+try
+{
+    var env = app.Services.GetRequiredService<IWebHostEnvironment>();
+    var config = app.Services.GetRequiredService<IConfiguration>();
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    var uploadDir = config["FileStorageSettings:UploadDirectory"] ?? "wwwroot/Uploads/book-images";
+    var fullPath = Path.Combine(env.WebRootPath, uploadDir);
+    if (!Directory.Exists(fullPath))
+    {
+        logger.LogInformation("Creating upload directory: {Directory}", fullPath);
+        Directory.CreateDirectory(fullPath);
+    }
+    // Test writability
+    var testFile = Path.Combine(fullPath, ".write-test");
+    await File.WriteAllTextAsync(testFile, "test");
+    File.Delete(testFile);
+    logger.LogInformation("Upload directory {Directory} is writable.", fullPath);
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogCritical(ex, "Failed to initialize upload directory.");
+    throw;
+}
+
+try
+{
+    app.Run();
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogCritical(ex, "Application terminated unexpectedly.");
+    throw;
+}

@@ -1,189 +1,160 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using GroupApi.Services.Interface;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using GroupApi.CommonDomain;
-using GroupApi.Data;
-using GroupApi.DTOs.Files;
-using GroupApi.Entities.Files;
-using GroupApi.Services.Interface;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace GroupApi.Services.Files
 {
     public class FileStorageService : IFileStorageService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _environment;
         private readonly IConfiguration _configuration;
-        private readonly string _storagePath;
+        private readonly ILogger<FileStorageService> _logger;
+        private readonly string _uploadDirectory;
+        private readonly long _maxFileSizeBytes;
+        private readonly string[] _allowedExtensions;
 
-        public FileStorageService(ApplicationDbContext context, IConfiguration configuration)
+        public FileStorageService(
+            IWebHostEnvironment environment,
+            IConfiguration configuration,
+            ILogger<FileStorageService> logger)
         {
-            _context = context;
-            _configuration = configuration;
-            _storagePath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
-            if (!Directory.Exists(_storagePath))
-            {
-                Directory.CreateDirectory(_storagePath);
-            }
+            _environment = environment ?? throw new ArgumentNullException(nameof(environment));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _uploadDirectory = _configuration["FileStorageSettings:UploadDirectory"] ?? "wwwroot/Uploads/book-images";
+            _maxFileSizeBytes = _configuration.GetValue<long>("FileStorageSettings:MaxFileSizeBytes", 10485760);
+            _allowedExtensions = _configuration.GetSection("FileStorageSettings:AllowedExtensions").Get<string[]>() ?? new[] { ".jpg", ".png", ".pdf", ".txt" };
+            _logger.LogDebug("FileStorageService initialized with upload directory: {UploadDirectory}", _uploadDirectory);
         }
 
-        public async Task<GenericResponse<FileReadDto>> UploadFileAsync(FileUploadDto dto)
+        public async Task<string> SaveFileAsync(IFormFile file)
         {
             try
             {
-                // Validate file
-                if (dto.File == null || dto.File.Length == 0)
+                _logger.LogInformation("Attempting to save file: {FileName}", file?.FileName);
+
+                if (file == null || file.Length == 0)
                 {
-                    return new ErrorModel(System.Net.HttpStatusCode.BadRequest, "No file provided.");
+                    _logger.LogWarning("Null or empty file provided.");
+                    throw new ArgumentException("No file provided.");
                 }
 
-                var maxFileSize = _configuration.GetValue<long>("FileStorage:MaxFileSize");
-                var allowedTypes = _configuration.GetSection("FileStorage:AllowedTypes").Get<string[]>();
-
-                if (dto.File.Length > maxFileSize)
+                if (file.Length > _maxFileSizeBytes)
                 {
-                    return new ErrorModel(System.Net.HttpStatusCode.BadRequest, $"File size exceeds the maximum limit of {maxFileSize / 1024 / 1024}MB.");
+                    _logger.LogWarning("File size {FileSize} exceeds maximum limit of {MaxSize} bytes.", file.Length, _maxFileSizeBytes);
+                    throw new ArgumentException($"File size exceeds the maximum limit of {_maxFileSizeBytes / 1024 / 1024} MB.");
                 }
 
-                if (!allowedTypes.Contains(dto.File.ContentType))
+                var extension = Path.GetExtension(file.FileName)?.ToLower();
+                if (string.IsNullOrEmpty(extension) || !_allowedExtensions.Contains(extension))
                 {
-                    return new ErrorModel(System.Net.HttpStatusCode.BadRequest, "File type not allowed.");
+                    _logger.LogWarning("Invalid file extension {Extension}. Allowed: {AllowedExtensions}", extension, string.Join(", ", _allowedExtensions));
+                    throw new ArgumentException($"File extension {extension} is not allowed. Allowed extensions: {string.Join(", ", _allowedExtensions)}.");
                 }
 
-                // Generate unique file name
-                var fileId = Guid.NewGuid();
-                var fileExtension = Path.GetExtension(dto.File.FileName);
-                var uniqueFileName = $"{fileId}{fileExtension}";
-                var filePath = Path.Combine(_storagePath, uniqueFileName);
+                var fileName = $"{Guid.NewGuid()}{extension}";
+                var relativePath = Path.Combine("Uploads", "book-images", fileName).Replace("\\", "/");
+                var fullPath = Path.Combine(_environment.WebRootPath, relativePath);
 
-                // Save file to disk
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                var directory = Path.GetDirectoryName(fullPath);
+                if (!Directory.Exists(directory))
                 {
-                    await dto.File.CopyToAsync(stream);
+                    _logger.LogInformation("Creating directory: {Directory}", directory);
+                    Directory.CreateDirectory(directory);
                 }
 
-                // Create metadata
-                var metadata = new FileMetadata
+                // Verify writability
+                var testFile = Path.Combine(directory, ".write-test");
+                try
                 {
-                    FileId = fileId,
-                    FileName = dto.File.FileName,
-                    FilePath = filePath,
-                    ContentType = dto.File.ContentType,
-                    FileSize = dto.File.Length,
-                    UploadedAt = DateTime.UtcNow
-                };
-
-                // Save to database
-                _context.FileMetadatas.Add(metadata);
-                await _context.SaveChangesAsync();
-
-                // Map to DTO
-                var fileReadDto = new FileReadDto
+                    await File.WriteAllTextAsync(testFile, "test");
+                    File.Delete(testFile);
+                }
+                catch (Exception ex)
                 {
-                    FileId = metadata.FileId,
-                    FileName = metadata.FileName,
-                    ContentType = metadata.ContentType,
-                    FileSize = metadata.FileSize,
-                    UploadedAt = metadata.UploadedAt
-                };
+                    _logger.LogError(ex, "Directory {Directory} is not writable.", directory);
+                    throw new IOException($"Directory {directory} is not writable: {ex.Message}");
+                }
 
-                return new GenericResponse<FileReadDto> { Data = fileReadDto };
-            }
-            catch (DbUpdateException ex)
-            {
-                return new ErrorModel(System.Net.HttpStatusCode.InternalServerError, $"Failed to upload file: {ex.InnerException?.Message ?? ex.Message}");
+                using (var stream = new FileStream(fullPath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                _logger.LogInformation("File saved successfully at: {FilePath}", relativePath);
+                return relativePath;
             }
             catch (Exception ex)
             {
-                return new ErrorModel(System.Net.HttpStatusCode.InternalServerError, $"Failed to upload file: {ex.Message}");
+                _logger.LogError(ex, "Failed to save file: {FileName}", file?.FileName);
+                throw new IOException($"Failed to save file: {ex.Message}", ex);
             }
         }
 
-        public async Task<GenericResponse<FileReadDto>> GetFileMetadataAsync(Guid fileId)
+        public async Task<byte[]?> GetFileAsync(string filePath)
         {
-            var metadata = await _context.FileMetadatas
-                .Where(f => f.FileId == fileId)
-                .Select(f => new FileReadDto
-                {
-                    FileId = f.FileId,
-                    FileName = f.FileName,
-                    ContentType = f.ContentType,
-                    FileSize = f.FileSize,
-                    UploadedAt = f.UploadedAt
-                })
-                .FirstOrDefaultAsync();
-
-            if (metadata == null)
-            {
-                return new ErrorModel(System.Net.HttpStatusCode.NotFound, "File not found.");
-            }
-
-            return new GenericResponse<FileReadDto> { Data = metadata };
-        }
-
-        public async Task<GenericResponse<IEnumerable<FileReadDto>>> GetAllFilesAsync()
-        {
-            var files = await _context.FileMetadatas
-                .Select(f => new FileReadDto
-                {
-                    FileId = f.FileId,
-                    FileName = f.FileName,
-                    ContentType = f.ContentType,
-                    FileSize = f.FileSize,
-                    UploadedAt = f.UploadedAt
-                })
-                .ToListAsync();
-
-            return new GenericResponse<IEnumerable<FileReadDto>> { Data = files };
-        }
-
-        public async Task<GenericResponse<bool>> DeleteFileAsync(Guid fileId)
-        {
-            var metadata = await _context.FileMetadatas.FindAsync(fileId);
-            if (metadata == null)
-            {
-                return new ErrorModel(System.Net.HttpStatusCode.NotFound, "File not found.");
-            }
-
             try
             {
-                // Delete file from disk
-                if (File.Exists(metadata.FilePath))
+                _logger.LogInformation("Attempting to retrieve file: {FilePath}", filePath);
+
+                if (string.IsNullOrEmpty(filePath))
                 {
-                    File.Delete(metadata.FilePath);
+                    _logger.LogWarning("GetFileAsync called with null or empty file path.");
+                    return null;
                 }
 
-                // Remove metadata from database
-                _context.FileMetadatas.Remove(metadata);
-                await _context.SaveChangesAsync();
+                var fullPath = Path.Combine(_environment.WebRootPath, filePath);
+                if (!File.Exists(fullPath))
+                {
+                    _logger.LogWarning("File not found at: {FilePath}", fullPath);
+                    return null;
+                }
 
-                return new GenericResponse<bool> { Data = true };
+                var bytes = await File.ReadAllBytesAsync(fullPath);
+                _logger.LogInformation("File retrieved successfully from: {FilePath}", filePath);
+                return bytes;
             }
             catch (Exception ex)
             {
-                return new ErrorModel(System.Net.HttpStatusCode.InternalServerError, $"Failed to delete file: {ex.Message}");
+                _logger.LogError(ex, "Failed to retrieve file: {FilePath}", filePath);
+                throw new IOException($"Failed to retrieve file: {ex.Message}", ex);
             }
         }
 
-        public async Task<GenericResponse<byte[]>> DownloadFileAsync(Guid fileId)
+        public async Task DeleteFileAsync(string filePath)
         {
-            var metadata = await _context.FileMetadatas.FindAsync(fileId);
-            if (metadata == null)
+            try
             {
-                return new ErrorModel(System.Net.HttpStatusCode.NotFound, "File not found.");
-            }
+                _logger.LogInformation("Attempting to delete file: {FilePath}", filePath);
 
-            if (!File.Exists(metadata.FilePath))
+                if (string.IsNullOrEmpty(filePath))
+                {
+                    _logger.LogWarning("DeleteFileAsync called with null or empty file path.");
+                    return;
+                }
+
+                var fullPath = Path.Combine(_environment.WebRootPath, filePath);
+                if (File.Exists(fullPath))
+                {
+                    await Task.Run(() => File.Delete(fullPath));
+                    _logger.LogInformation("File deleted successfully: {FilePath}", filePath);
+                }
+                else
+                {
+                    _logger.LogWarning("File not found for deletion: {FilePath}", fullPath);
+                }
+            }
+            catch (Exception ex)
             {
-                return new ErrorModel(System.Net.HttpStatusCode.NotFound, "File not found on disk.");
+                _logger.LogError(ex, "Failed to delete file: {FilePath}", filePath);
+                throw new IOException($"Failed to delete file: {ex.Message}", ex);
             }
-
-            var fileBytes = await File.ReadAllBytesAsync(metadata.FilePath);
-            return new GenericResponse<byte[]> { Data = fileBytes };
         }
     }
 }

@@ -2,9 +2,10 @@
 
 namespace GroupApi.DTOs.Files
 {
-    public class FileUploadDto
-    {
-        [Required]
-        public IFormFile File { get; set; }
-    }
+   
+        public class FileUploadDto
+        {
+            public IFormFile File { get; set; }
+        }
+    
 }

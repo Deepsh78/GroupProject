@@ -17,12 +17,16 @@ namespace GroupApi.Services.Books
     {
         private readonly IGenericRepository<Book> _bookRepo;
         private readonly IGenericRepository<Publisher> _publisherRepo;
-       
-        public BookService(IGenericRepository<Book> bookRepo,IGenericRepository<Publisher> publisherRepo)
+        private readonly IFileStorageService _fileStorageService;
+
+        public BookService(
+            IGenericRepository<Book> bookRepo,
+            IGenericRepository<Publisher> publisherRepo,
+            IFileStorageService fileStorageService)
         {
             _bookRepo = bookRepo;
             _publisherRepo = publisherRepo;
-            
+            _fileStorageService = fileStorageService;
         }
 
         public async Task<GenericResponse<IEnumerable<BookReadDto>>> GetAllAsync()
@@ -44,7 +48,8 @@ namespace GroupApi.Services.Books
                 PublisherName = b.Publisher?.Name ?? "",
                 PublicationDate = b.PublicationDate,
                 CreatedAt = b.CreatedAt,
-                IsComingSoon = b.IsComingSoon
+                IsComingSoon = b.IsComingSoon,
+                BookImage = b.BookImage
             });
 
             return result.ToList();
@@ -72,7 +77,8 @@ namespace GroupApi.Services.Books
                 PublisherName = book.Publisher?.Name ?? "",
                 PublicationDate = book.PublicationDate,
                 CreatedAt = book.CreatedAt,
-                IsComingSoon = book.IsComingSoon
+                IsComingSoon = book.IsComingSoon,
+                BookImage = book.BookImage
             };
         }
 
@@ -80,6 +86,12 @@ namespace GroupApi.Services.Books
         {
             try
             {
+                string? imagePath = null;
+                if (dto.BookImage != null)
+                {
+                    imagePath = await _fileStorageService.SaveFileAsync(dto.BookImage);
+                }
+
                 var book = new Book
                 {
                     BookId = Guid.NewGuid(),
@@ -92,12 +104,14 @@ namespace GroupApi.Services.Books
                     PublisherId = dto.PublisherId,
                     PublicationDate = dto.PublicationDate,
                     IsComingSoon = dto.IsComingSoon,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    BookImage = imagePath
                 };
 
                 await _bookRepo.AddAsync(book);
                 await _bookRepo.SaveChangesAsync();
 
+                var publisher = await _publisherRepo.GetByIdAsync(book.PublisherId);
                 return new BookReadDto
                 {
                     BookId = book.BookId,
@@ -108,22 +122,19 @@ namespace GroupApi.Services.Books
                     Language = book.Language,
                     Stock = book.Stock,
                     PublisherId = book.PublisherId,
-                    PublisherName = "", // You may fetch it if needed
+                    PublisherName = publisher?.Name ?? "",
                     PublicationDate = book.PublicationDate,
                     CreatedAt = book.CreatedAt,
-                    IsComingSoon = book.IsComingSoon
+                    IsComingSoon = book.IsComingSoon,
+                    BookImage = book.BookImage
                 };
             }
             catch (Exception ex)
             {
-                // Log the exception (ex) here if needed
-                // You can use a logging framework like Serilog, NLog, etc.
-                // For now, just return an error response
-                {
-                    return new ErrorModel(HttpStatusCode.BadRequest, "Error creating book");
-                }
+                return new ErrorModel(HttpStatusCode.BadRequest, $"Error creating book: {ex.Message}");
             }
         }
+
         public async Task<BookDetailDto?> GetBookDetailAsync(Guid id)
         {
             var book = await _bookRepo.TableNoTracking
@@ -146,6 +157,7 @@ namespace GroupApi.Services.Books
                 Language = book.Language,
                 Stock = book.Stock,
                 PublisherName = book.Publisher?.Name ?? "",
+                BookImage = book.BookImage,
                 Authors = book.BookAuthors.Select(ba => ba.Author.Name).ToList(),
                 Genres = book.BookGenres.Select(bg => bg.Genre.Name).ToList(),
                 Formats = book.BookFormats.Select(bf => bf.Format.Name).ToList(),
@@ -159,6 +171,17 @@ namespace GroupApi.Services.Books
             if (book == null)
                 return new ErrorModel(HttpStatusCode.NotFound, "Book not found");
 
+            string? imagePath = book.BookImage;
+            if (dto.BookImage != null)
+            {
+                // Delete old image if exists
+                if (!string.IsNullOrEmpty(book.BookImage))
+                {
+                    await _fileStorageService.DeleteFileAsync(book.BookImage);
+                }
+                imagePath = await _fileStorageService.SaveFileAsync(dto.BookImage);
+            }
+
             book.BookName = dto.BookName;
             book.ISBN = dto.ISBN;
             book.Price = dto.Price;
@@ -168,10 +191,12 @@ namespace GroupApi.Services.Books
             book.PublisherId = dto.PublisherId;
             book.PublicationDate = dto.PublicationDate;
             book.IsComingSoon = dto.IsComingSoon;
+            book.BookImage = imagePath;
 
             _bookRepo.Update(book);
             await _bookRepo.SaveChangesAsync();
 
+            var publisher = await _publisherRepo.GetByIdAsync(book.PublisherId);
             return new BookReadDto
             {
                 BookId = book.BookId,
@@ -182,10 +207,11 @@ namespace GroupApi.Services.Books
                 Language = book.Language,
                 Stock = book.Stock,
                 PublisherId = book.PublisherId,
-                PublisherName = "", // optional
+                PublisherName = publisher?.Name ?? "",
                 PublicationDate = book.PublicationDate,
                 CreatedAt = book.CreatedAt,
-                IsComingSoon = book.IsComingSoon
+                IsComingSoon = book.IsComingSoon,
+                BookImage = book.BookImage
             };
         }
 
@@ -194,6 +220,11 @@ namespace GroupApi.Services.Books
             var book = await _bookRepo.GetByIdAsync(id);
             if (book == null)
                 return new ErrorModel(HttpStatusCode.NotFound, "Book not found");
+
+            if (!string.IsNullOrEmpty(book.BookImage))
+            {
+                await _fileStorageService.DeleteFileAsync(book.BookImage);
+            }
 
             _bookRepo.Delete(book);
             await _bookRepo.SaveChangesAsync();
@@ -204,7 +235,6 @@ namespace GroupApi.Services.Books
         {
             var query = _bookRepo.TableNoTracking
                 .Include(b => b.Publisher)
-          
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
@@ -215,7 +245,6 @@ namespace GroupApi.Services.Books
                     b.ISBN.Contains(filter.SearchTerm));
             }
 
-         
             query = filter.SortByPriceDescending
                 ? query.OrderByDescending(b => b.Price)
                 : query.OrderBy(b => b.Price);
@@ -228,16 +257,11 @@ namespace GroupApi.Services.Books
                 Price = b.Price,
                 Description = b.Description,
                 Language = b.Language,
-                PublisherName = b.Publisher.Name
+                PublisherName = b.Publisher.Name,
+                BookImage = b.BookImage
             });
 
             return await projection.ToPagedListAsync(filter.Page, filter.PageSize);
         }
-
-
-    
     }
-
 }
-
-
