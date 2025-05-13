@@ -10,7 +10,7 @@
         public string Language { get; set; }
         public int Stock { get; set; }
         public string PublisherName { get; set; }
-        public string? BookImage { get; set; }
+
         public List<string> Authors { get; set; }
         public List<string> Genres { get; set; }
         public List<string> Formats { get; set; }

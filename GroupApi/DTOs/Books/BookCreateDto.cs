@@ -11,7 +11,6 @@
         public Guid PublisherId { get; set; }
         public DateTime PublicationDate { get; set; }
         public bool IsComingSoon { get; set; }
-        public IFormFile? BookImage { get; set; }
     }
 
 }
