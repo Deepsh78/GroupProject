@@ -11,7 +11,10 @@ namespace GroupApi.Services.Interface
         Task<bool> ForgotPasswordAsync(ForgotPasswordDto model);
         Task<bool> VerifyPasswordResetOtpAsync(VerifyOtpDto model);
         Task<bool> ResetPasswordAsync(ResetPasswordDto model);
-        Task<bool> AssignStaffRoleAsync(string userId, string adminId);
+        Task<bool> AssignStaffRoleAsync(string userId);
         Task<bool> ResendOtpAsync(ResendOtpDto model);
+        Task<bool> AssignAdminRoleAsync(string userId);
+        Task<List<UserDto>> GetAllUsersAsync();
+
     }
 }

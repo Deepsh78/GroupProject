@@ -118,24 +118,36 @@ namespace GroupApi.Controllers
             return Ok(new GenericResponse<bool> { Data = true });
         }
 
-        [Authorize(Roles = "Admin")]
         [HttpPost("assign-staff-role")]
         public async Task<ActionResult<GenericResponse<bool>>> AssignStaffRole([FromBody] AssignStaffRoleDto model)
         {
             if (!ModelState.IsValid)
                 return BadRequest(new ErrorModel(HttpStatusCode.BadRequest, "Invalid input data"));
 
-            var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(adminId))
-                return Unauthorized(new ErrorModel(HttpStatusCode.Unauthorized, "Admin not authenticated"));
-
-            var result = await _authService.AssignStaffRoleAsync(model.UserId, adminId);
+            var result = await _authService.AssignStaffRoleAsync(model.UserId);
             if (!result)
-                return StatusCode((int)HttpStatusCode.Forbidden, new ErrorModel(HttpStatusCode.Forbidden, "Unauthorized or user not found"));
+                return StatusCode((int)HttpStatusCode.Forbidden, new ErrorModel(HttpStatusCode.Forbidden, "User not found"));
 
             return Ok(new GenericResponse<bool> { Data = true });
         }
+        [HttpPost("assign-admin-role")]
+        public async Task<ActionResult<GenericResponse<bool>>> AssignAdminRole([FromBody] AssignStaffRoleDto model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ErrorModel(HttpStatusCode.BadRequest, "Invalid input data"));
 
+            var result = await _authService.AssignAdminRoleAsync(model.UserId);
+            if (!result)
+                return StatusCode((int)HttpStatusCode.Forbidden, new ErrorModel(HttpStatusCode.Forbidden, "User not found"));
+
+            return Ok(new GenericResponse<bool> { Data = true });
+        }
+        [HttpGet("users")]
+        public async Task<ActionResult<GenericResponse<List<UserDto>>>> GetAllUsers()
+        {
+            var users = await _authService.GetAllUsersAsync();
+            return Ok(new GenericResponse<List<UserDto>> { Data = users });
+        }
         [HttpGet("/me")]
         public async Task<IActionResult> Me()
         {

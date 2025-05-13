@@ -3,6 +3,7 @@ using System;
 using GroupApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GroupApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicaionDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250512174149_files")]
+    partial class files
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -460,10 +463,15 @@ namespace GroupApi.Migrations
                     b.Property<long>("FileSize")
                         .HasColumnType("bigint");
 
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("UploadedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("FileId");
+
+                    b.HasIndex("MemberId");
 
                     b.ToTable("FileMetadata");
                 });
@@ -910,6 +918,17 @@ namespace GroupApi.Migrations
                         .IsRequired();
 
                     b.Navigation("Book");
+                });
+
+            modelBuilder.Entity("GroupApi.Entities.Files.FileMetadata", b =>
+                {
+                    b.HasOne("GroupApi.Entities.Member", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Member");
                 });
 
             modelBuilder.Entity("GroupApi.Entities.Oders.Order", b =>
