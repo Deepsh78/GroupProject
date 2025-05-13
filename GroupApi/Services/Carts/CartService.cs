@@ -24,7 +24,7 @@ namespace GroupApi.Services.Carts
             _bookRepo = bookRepo;
         }
 
-        public async Task<GenericResponse<IEnumerable<CartDto>>> GetAllAsync()
+        public async Task<GenericResponse<CartDto>> GetAllAsync()
         {
             var memberId = _currentUserService.UserId;
             var cart = await _cartRepo.TableNoTracking
@@ -35,10 +35,10 @@ namespace GroupApi.Services.Carts
             if (cart == null)
                 return new ErrorModel(HttpStatusCode.NotFound, "Cart not found");
 
-            var result = cart.CartItems.Select(ci => new CartDto
+            var cartDto = new CartDto
             {
-                CartId = ci.CartId,
-                MemberId = ci.Cart.MemberId,
+                CartId = cart.CartId,
+                MemberId = cart.MemberId,
                 CartItems = cart.CartItems.Select(c => new CartItemDto
                 {
                     CartItemId = c.CartItemId,
@@ -47,13 +47,13 @@ namespace GroupApi.Services.Carts
                     BookName = c.Book.BookName,
                     Quantity = c.Quantity,
                     Price = c.Book.Price,
-                    TotalPrice = ci.Quantity * ci.Book.Price // Calculate total price (price * quantity)
-
+                    TotalPrice = c.Quantity * c.Book.Price
                 }).ToList()
-            }).ToList();
+            };
 
-            return result;
+            return cartDto;
         }
+
 
         public async Task<GenericResponse<CartDto?>> GetByIdAsync()
         {
@@ -84,7 +84,6 @@ namespace GroupApi.Services.Carts
 
             return cartDto;
         }
-
         public async Task<GenericResponse<CartDto>> AddAsync(Guid bookId, int quantity)
         {
             try
@@ -96,7 +95,10 @@ namespace GroupApi.Services.Carts
                     return new ErrorModel(HttpStatusCode.NotFound, "Book not found");
 
                 var memberId = _currentUserService.UserId;
-                var cart = await _cartRepo.TableNoTracking
+
+                // Get or create cart
+                var cart = await _cartRepo.Table
+                    .Include(c => c.CartItems)
                     .FirstOrDefaultAsync(c => c.MemberId == memberId);
 
                 if (cart == null)
@@ -104,40 +106,52 @@ namespace GroupApi.Services.Carts
                     cart = new Cart
                     {
                         CartId = Guid.NewGuid(),
-                        MemberId = memberId
+                        MemberId = memberId,
+                        CartItems = new List<CartItem>()
                     };
                     await _cartRepo.AddAsync(cart);
+                    await _cartRepo.SaveChangesAsync(); // Save cart first to get ID
                 }
 
-                var existingCartItem = await _cartItemRepo.TableNoTracking
-                    .FirstOrDefaultAsync(ci => ci.CartId == cart.CartId && ci.BookId == bookId);
+                // Check if book already in cart
+                var existingCartItem = cart.CartItems.FirstOrDefault(ci => ci.BookId == bookId);
+
+                int totalRequestedQuantity = quantity;
+                if (existingCartItem != null)
+                    totalRequestedQuantity += existingCartItem.Quantity;
+
+                if (totalRequestedQuantity > book.Stock)
+                    return new ErrorModel(HttpStatusCode.BadRequest, "Not enough stock available for this book");
 
                 if (existingCartItem != null)
                 {
-                    existingCartItem.Quantity += quantity; // Correctly add to the quantity
-                    _cartItemRepo.Update(existingCartItem);
+                    // UPDATE quantity
+                    existingCartItem.Quantity += quantity;
+                    _cartItemRepo.Update(existingCartItem); // Force EF to recognize change
                 }
                 else
                 {
-                    var cartItem = new CartItem
+                    // ADD new item
+                    var newItem = new CartItem
                     {
                         CartItemId = Guid.NewGuid(),
                         CartId = cart.CartId,
                         BookId = bookId,
                         Quantity = quantity
                     };
-                    await _cartItemRepo.AddAsync(cartItem);
+                    await _cartItemRepo.AddAsync(newItem);
                 }
 
                 await _cartRepo.SaveChangesAsync();
 
+                // Return the updated cart
                 var cartDto = new CartDto
                 {
                     CartId = cart.CartId,
                     MemberId = cart.MemberId,
                     CartItems = await _cartItemRepo.TableNoTracking
                         .Where(ci => ci.CartId == cart.CartId)
-                        .Include(ci => ci.Book)  // Eagerly load the related Book entity
+                        .Include(ci => ci.Book)
                         .Select(ci => new CartItemDto
                         {
                             CartItemId = ci.CartItemId,
@@ -146,7 +160,7 @@ namespace GroupApi.Services.Carts
                             BookName = ci.Book.BookName,
                             Quantity = ci.Quantity,
                             Price = ci.Book.Price,
-                            TotalPrice = ci.Quantity * ci.Book.Price // Calculate total price (price * quantity)
+                            TotalPrice = ci.Quantity * ci.Book.Price
                         }).ToListAsync()
                 };
 
