@@ -222,6 +222,55 @@ namespace GroupApi.Services.Carts
 
             return cartDto;
         }
+        public async Task<GenericResponse<CartDto>> RemoveCartItemAsync(Guid cartItemId)
+        {
+            var cartItem = await _cartItemRepo.Table
+                .Include(ci => ci.Book)
+                .Include(ci => ci.Cart)
+                .ThenInclude(c => c.CartItems)
+                .FirstOrDefaultAsync(ci => ci.CartItemId == cartItemId);
+
+            if (cartItem == null)
+                return new ErrorModel(HttpStatusCode.NotFound, "Cart item not found");
+
+            var cart = cartItem.Cart;
+
+            if (cartItem.Quantity > 1)
+            {
+                cartItem.Quantity -= 1;
+                await _cartItemRepo.SaveChangesAsync();
+            }
+            else
+            {
+                _cartItemRepo.Delete(cartItem);
+                await _cartItemRepo.SaveChangesAsync();
+            }
+
+            // Refresh cart items after potential change
+            var updatedCartItems = cart.CartItems
+                .Where(ci => ci.CartItemId != cartItemId || cartItem.Quantity > 1) // keep only if not deleted
+                .Select(c => new CartItemDto
+                {
+                    CartItemId = c.CartItemId,
+                    CartId = c.CartId,
+                    BookId = c.BookId,
+                    BookName = c.Book.BookName,
+                    Quantity = c.Quantity,
+                    Price = c.Book.Price,
+                    TotalPrice = c.Quantity * c.Book.Price
+                }).ToList();
+
+            var updatedCartDto = new CartDto
+            {
+                CartId = cart.CartId,
+                MemberId = cart.MemberId,
+                CartItems = updatedCartItems
+            };
+
+            return updatedCartDto;
+        }
+
+
 
     }
 }

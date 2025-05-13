@@ -18,6 +18,7 @@ namespace GroupApi.Services.Carts
 
         // Remove a book from the cart
         Task<GenericResponse<CartDto>> RemoveAsync(Guid cartItemId);
+        Task<GenericResponse<CartDto>> RemoveCartItemAsync(Guid cartItemId);
     }
 
 }

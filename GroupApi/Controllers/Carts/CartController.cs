@@ -1,4 +1,5 @@
-﻿using GroupApi.DTOs.Carts;
+﻿using GroupApi.CommonDomain;
+using GroupApi.DTOs.Carts;
 using GroupApi.Services.Carts;
 using GroupApi.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
@@ -72,7 +73,7 @@ namespace GroupApi.Controllers
             return StatusCode((int)result.Error!.StatusCode, result);
         }
 
-        [HttpDelete("{cartItemId}")]
+        [HttpDelete("{cartId}")]
         public async Task<IActionResult> Remove(Guid cartItemId)
         {
             var result = await _cartService.RemoveAsync(cartItemId);
@@ -81,5 +82,14 @@ namespace GroupApi.Controllers
                 return Ok(result.Data);
             return StatusCode((int)result.Error!.StatusCode, result);
         }
+        [HttpDelete("cart-item/{cartItemId}")]
+        public async Task<IActionResult> DeleteCartItem(Guid cartItemId)
+        {
+            var result = await _cartService.RemoveCartItemAsync(cartItemId);
+            if (result.IsSuccess)
+                return Ok(result.Data);
+            return StatusCode((int)result.Error!.StatusCode, result);
+        }
+
     }
 }
