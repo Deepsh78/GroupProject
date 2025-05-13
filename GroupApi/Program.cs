@@ -28,6 +28,7 @@ using GroupApi.Services.WebSocket;
 
 using GroupApi.Services.Discounts;
 using GroupApi.Services.MemberOrder;
+using GroupApi.Services.Reviews;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -147,7 +148,7 @@ builder.Services.AddScoped<WebSocketService>();
 
 builder.Services.AddScoped<IMemberDiscountService, MemberDiscountService>();
 builder.Services.AddScoped<IMemberOrderService, MemberOrderService>();
-
+builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 var app = builder.Build();

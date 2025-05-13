@@ -46,7 +46,9 @@ namespace GroupApi.Services.Carts
                     BookId = c.BookId,
                     BookName = c.Book.BookName,
                     Quantity = c.Quantity,
-                    Price = c.Book.Price
+                    Price = c.Book.Price,
+                    TotalPrice = ci.Quantity * ci.Book.Price // Calculate total price (price * quantity)
+
                 }).ToList()
             }).ToList();
 
@@ -75,7 +77,8 @@ namespace GroupApi.Services.Carts
                     BookId = ci.BookId,
                     BookName = ci.Book.BookName,
                     Quantity = ci.Quantity,
-                    Price = ci.Book.Price
+                    Price = ci.Book.Price,
+                    TotalPrice = ci.Quantity * ci.Book.Price // Calculate total price (price * quantity)
                 }).ToList()
             };
 
@@ -187,23 +190,24 @@ namespace GroupApi.Services.Carts
             return cartDto;
         }
 
-        public async Task<GenericResponse<CartDto>> RemoveAsync(Guid cartItemId)
+        public async Task<GenericResponse<CartDto>> RemoveAsync(Guid cartId)
         {
-            var cartItem = await _cartItemRepo.GetByIdAsync(cartItemId);
-            if (cartItem == null)
-                return new ErrorModel(HttpStatusCode.NotFound, "Cart item not found");
+            var cart = await _cartRepo.GetByIdAsync(cartId);
+            if (cart == null)
+                return new ErrorModel(HttpStatusCode.NotFound, "Cart not found");
 
-            _cartItemRepo.Delete(cartItem);
+            _cartRepo.Delete(cart);
             await _cartRepo.SaveChangesAsync();
 
             var cartDto = new CartDto
             {
-                CartId = cartItem.CartId,
-                MemberId = cartItem.Cart.MemberId,
+                CartId = cart.CartId,
+                MemberId = cart.MemberId,
                 CartItems = new List<CartItemDto>()
             };
 
             return cartDto;
         }
+
     }
 }

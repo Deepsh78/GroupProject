@@ -139,7 +139,7 @@ namespace GroupApi.Controllers
         public async Task<IActionResult> Me()
         {
             var userId = _currentUserService.UserId;
-
+            var email = _currentUserService.UserEmail;
             if (userId == Guid.Empty)
                 return Unauthorized(new { message = "User not logged in" });
 
@@ -154,7 +154,6 @@ namespace GroupApi.Controllers
                 user.Email,
                 user.UserName,
                 user.PhoneNumber
-                // Add more properties if needed
             });
         }
     }

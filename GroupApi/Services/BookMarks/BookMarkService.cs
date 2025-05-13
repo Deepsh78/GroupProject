@@ -60,7 +60,8 @@ namespace GroupApi.Services.BookMarks
                 {
                     BookMarkId = Guid.NewGuid(),
                     BookId = bookId,
-                    MemberId = memberId
+                    MemberId = memberId,
+                    
                 };
 
                 await _bookMarkRepo.AddAsync(bookMark);
@@ -92,7 +93,7 @@ namespace GroupApi.Services.BookMarks
                 return new ErrorModel(HttpStatusCode.NotFound, "Bookmark not found.");
 
             _bookMarkRepo.Delete(bookmark);
-         
+            await _bookMarkRepo.SaveChangesAsync();
 
             return new BookMarkDto
             {
