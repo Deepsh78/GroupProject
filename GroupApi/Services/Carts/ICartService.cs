@@ -5,8 +5,7 @@ namespace GroupApi.Services.Carts
 {
     public interface ICartService
     {
-        // Get all items in the cart for a specific member
-        Task<GenericResponse<IEnumerable<CartDto>>> GetAllAsync();
+        Task<GenericResponse<CartDto>> GetAllAsync();
 
         // Get a specific cart by member ID
         Task<GenericResponse<CartDto?>> GetByIdAsync();
